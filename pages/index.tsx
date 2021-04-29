@@ -5,7 +5,7 @@ import { getSortedPostsData } from '../lib/posts';
 import Date from '../components/date';
 import Link from 'next/link';
 
-export const getStaticProps: GetStaticProps = async context => {
+export const getStaticProps: GetStaticProps = async (context: any) => {
   const allPostsData = getSortedPostsData();
   return {
     props: {
@@ -48,6 +48,6 @@ const Home = ({allPostsData}: any) => (
       </Row>
     </Row>
   </Layout>
-)
+);
 
 export default Home;

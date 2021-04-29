@@ -1,8 +1,7 @@
-import { AppProps } from "next/dist/next-server/lib/router/router";
-import Head from "next/head";
-import React, { ReactNode } from "react";
-import { Navbar, Nav, Container, Row, Col, Image } from "react-bootstrap";
-import Sidebar from "./sidebar";
+import Head from 'next/head';
+import React, { ReactNode } from 'react';
+import { Navbar, Nav, Container, Row, Col } from 'react-bootstrap';
+import Sidebar from './sidebar';
 
 const siteTitle = "Dan Mallott's Blog";
 
