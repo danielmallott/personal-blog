@@ -5,6 +5,7 @@ import { getAllPostIds, getPostData } from '../../lib/posts';
 import Date from '../../components/date';
 import Link from 'next/link';
 import hljs from 'highlight.js';
+import { PostData } from '../../models/post-data';
 
 export async function getStaticProps({params}: any) {
   const postData = await getPostData(params.id);
@@ -23,7 +24,7 @@ export async function getStaticPaths() {
   };
 }
 
-function Post({postData}: any) {
+function Post({postData}: {postData: PostData}) {
   useEffect(() => {
     hljs.highlightAll();
   }, []);
@@ -35,7 +36,7 @@ function Post({postData}: any) {
       <h1>{postData.title}</h1>
       <small><Date dateString={postData.date} /></small>
       <hr/>
-      <div dangerouslySetInnerHTML={{ __html: postData.contentHtml }} />
+      <div dangerouslySetInnerHTML={{ __html: postData.htmlContent }} />
       <hr />
       <div>Thanks for reading!</div>
       <footer><Link href="/">Back to home</Link></footer>

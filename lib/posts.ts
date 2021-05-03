@@ -3,27 +3,33 @@ import path from 'path';
 import matter, { GrayMatterFile } from 'gray-matter';
 import remark from 'remark';
 import html from 'remark-html';
+import { SortedPost } from '../models/sorted-post';
+import { PostData } from '../models/post-data';
 
 const highlight = require('remark-highlight.js');
 
 const postsDirectory: string = path.join(process.cwd(), 'posts');
 
-export function getSortedPostsData() {
-  const fileNames = fs.readdirSync(postsDirectory);
-  const allPostsData: any = fileNames.map(fileName => {
-    const id = fileName.replace(/\.md$/, '');
-    const fullPath = path.join(postsDirectory, fileName);
-    const fileContents = fs.readFileSync(fullPath, 'utf-8');
+export function getSortedPostsData(): SortedPost[] {
+  const fileNames: string[] = fs.readdirSync(postsDirectory);
+  const allPostsData: SortedPost[] = fileNames.map(fileName => {
+    const id: string = fileName.replace(/\.md$/, '');
+    const fullPath: string = path.join(postsDirectory, fileName);
+    const fileContents: string = fs.readFileSync(fullPath, 'utf-8');
 
-    const matterResult = matter(fileContents);
+    const matterResult: matter.GrayMatterFile<string> = matter(fileContents);
 
     return {
-      id,
-      ...matterResult.data
+      id: id,
+      title: matterResult.data.title,
+      date: matterResult.data.date,
+      summary: matterResult.data.summary,
+      tags: matterResult.data.tags,
+      headerImage: matterResult.data.headerImage,
     }
   });
 
-  return allPostsData.sort((a: any, b: any) => {
+  return allPostsData.sort((a: SortedPost, b: SortedPost) => {
     if (a.date < b.date) {
       return 1;
     } else {
@@ -50,7 +56,7 @@ export function getAllPostIds() {
   });
 }
 
-export async function getPostData(id: string) {
+export async function getPostData(id: string): Promise<PostData> {
   const fullPath = path.join(postsDirectory, `${id}.md`);
   const fileContents = fs.readFileSync(fullPath, 'utf-8');
 
@@ -63,8 +69,12 @@ export async function getPostData(id: string) {
   const contentHtml = processedContent.toString();
 
   return {
-    id,
-    contentHtml,
-    ...matterResult.data
+    id: id,
+    htmlContent: contentHtml,
+    title: matterResult.data.title,
+    date: matterResult.data.date,
+    summary: matterResult.data.summary,
+    tags: matterResult.data.tags,
+    headerImage: matterResult.data.headerImage,
   };
 }

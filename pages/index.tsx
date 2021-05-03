@@ -1,12 +1,21 @@
 import Layout from '../components/layout';
 import { Row, Card, Col, Badge } from 'react-bootstrap';
 import { GetStaticProps } from 'next';
-import { getSortedPostsData } from '../lib/posts';
+import { getPostData, getSortedPostsData } from '../lib/posts';
 import Date from '../components/date';
 import Link from 'next/link';
+import { generateRSS } from '../lib/rss';
+import { PostData } from '../models/post-data';
+import fs from 'fs';
 
 export const getStaticProps: GetStaticProps = async (context: any) => {
   const allPostsData = getSortedPostsData();
+  const postIds: string[] = allPostsData.map(post => post.id);
+  const allPostDetails: PostData[] = await Promise.all(postIds.map(getPostData));
+
+  const rss = await generateRSS(allPostDetails);
+  fs.writeFileSync('./public/rss.xml', rss);
+
   return {
     props: {
       allPostsData

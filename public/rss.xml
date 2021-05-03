@@ -1,0 +1,493 @@
+
+    <rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
+      <channel>
+        <title>Daniel Mallott</title>
+        <link>https://www.danielmallott.com</link>
+        <description>Talking .NET, SQL Server, and Software Development</description>
+        <language>en</language>
+        <lastBuildDate>Fri, 30 Apr 2021 00:00:00 GMT</lastBuildDate>
+        <atom:link href="https://www.danielmallott.com" rel="self" type="application/rss+xml"/>
+        
+        <item>
+            <guid>https://www.danielmallott.com/posts/new-blog-site</guid>
+            <title>A New Blog Site!</title>
+            <description>Introducing my new blog site!</description>
+            <link>https://www.danielmallott.com/posts/new-blog-site</link>
+            <pubDate>Fri, 30 Apr 2021 00:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>Welcome to my new blog site</h2>
+<p>When I first put together my blog in late 2018/early 2019, I chose Wordpress since it enabled me to get going very quickly with low overhead. Over time, I've become more and more frustrated with the user experience and maintenance overhead that Wordpress brings (not to mention the Azure bill). At the same time, I've been reading more about static site generation, and the benefits it can bring to small sites like mine.</p>
+<p>After a false start at the beginning of the COVID-19 pandemic with Metalsmith, I decided to try Next.js, and, here we are! This blog is built on Next.js using TypeScript, Bootstrap, and Font Awesome Pro. I can't say enough about the development experience that Next.js offers, and its tutorial teaches really useful concepts.</p>
+<p>I can't promise that I will be better at updating on a regular basis, but I will try.</p>
+]]></content:encoded>
+        </item>
+    
+        <item>
+            <guid>https://www.danielmallott.com/posts/handling-flexible-search-needs-using-stored-procedures-and-dapper</guid>
+            <title>Handling Flexible Search Needs Using Stored Procedures and Dapper</title>
+            <description>In this post, I detail how to use Stored Procedures and Dapper to handle flexible search needs in .NET and SQL Server.</description>
+            <link>https://www.danielmallott.com/posts/handling-flexible-search-needs-using-stored-procedures-and-dapper</link>
+            <pubDate>Wed, 29 Jan 2020 00:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h6>Author's Note: This article originally appeared on the <a href="https://www.pass.org">PASS</a> <a href="https://www.pass.org/PASSBlog/TabId/68281/ArtMID/99177/ArticleID/764/Handling-Flexible-Search-Needs-Using-Stored-Procedures-and-Dapper.aspx">Blog</a> on 28-January-2020. It is reprinted here by permission.</h6>
+<h2>Introduction</h2>
+<p>Data access from applications has traditionally followed one of two routes: either using stored procedures or using ORMs. Both have their advantages and drawbacks. In this article, we look at how to handle flexible searching needs using the stored procedure approach.</p>
+<h2>Problem</h2>
+<p>Traditionally, even systems that perform data access only through stored procedures face challenges when it comes to searching data. While simple CRUD is easy, searching on multiple fields can lead to one of several suboptimal solutions. Developers may introduce a stored procedure for each search combination – this often happens when a system evolves its search capabilities – or they may introduce branching logic to existing stored procedures or they may decide to introduce an ORM just for searching, such as Entity Framework or LINQ-to-SQL.</p>
+<h2>Approach</h2>
+<p>So how do we avoid these issues? We combine two concepts: executing Dynamic SQL with sp_executesql and using Dapper as a lightweight ORM to map objects. Together, these will allow us to search using a flexible combination of terms without code or plan bloat.</p>
+<h2>Requirements</h2>
+<p>We are building an API using .NET Core on the Wide World Importers database. We have already created model classes that mirror our database objects and have basic CRUD functions covered. We have received a request for an endpoint that will return Orders with associated Order Lines that match the following search criteria using “and” logic: Customer ID, Sales Person ID, Contact Person ID, Order Date, Expected Delivery Date, Customer Purchase Order Number, Stock Item ID, Description, Quantity, and Unit Price. Any, all, or none of those search parameters may be supplied by consumers of the API. Additionally, it should be easy to add more parameters without breaking existing code.</p>
+<h2>Solution</h2>
+<h3>The Stored Procedure</h3>
+<p>First, we write our stored procedure. We are going to place some decently complex logic in here, so we will look at each part in turn.</p>
+<p>The declaration of the stored procedure is as expected. Note that all parameters are optional with a default value of ‘NULL’. The purpose of this will be explained further down.</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">PROCEDURE</span> Sales.SearchOrders
+    <span class="hljs-variable">@customerID</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
+    ,<span class="hljs-variable">@salesPersonID</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
+    ,<span class="hljs-variable">@contactPersonID</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
+    ,<span class="hljs-variable">@orderDate</span> <span class="hljs-type">DATE</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
+    ,<span class="hljs-variable">@expectedDeliveryDate</span> <span class="hljs-type">DATE</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
+    ,<span class="hljs-variable">@customerPurchaseOrderNumber</span> NVARCHAR(<span class="hljs-number">20</span>) <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
+    ,<span class="hljs-variable">@stockItemID</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
+    ,<span class="hljs-variable">@description</span> NVARCHAR(<span class="hljs-number">100</span>) <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
+    ,<span class="hljs-variable">@quantity</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
+    ,<span class="hljs-variable">@unitPrice</span> <span class="hljs-type">DECIMAL</span>(<span class="hljs-number">18</span>,<span class="hljs-number">2</span>) <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span></code></pre>
+<p>From here, we set up the base of our dynamic SQL statement:</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@sql</span> NVARCHAR(MAX);
+
+<span class="hljs-comment">-- Set our base SQL.</span>
+<span class="hljs-comment">-- Idea is that we want all orders and order lines that fit the criteria</span>
+<span class="hljs-keyword">SET</span> <span class="hljs-variable">@sql</span> <span class="hljs-operator">=</span> <span class="hljs-string">'
+        SELECT O.OrderID
+            ,O.CustomerID
+            ,O.SalespersonPersonID
+            ,O.PickedByPersonID
+            ,O.ContactPersonID
+            ,O.BackorderOrderID
+            ,O.OrderDate
+            ,O.ExpectedDeliveryDate
+            ,O.CustomerPurchaseOrderNumber
+            ,O.IsUndersupplyBackordered
+            ,O.Comments
+            ,O.DeliveryInstructions
+            ,O.InternalComments
+            ,O.PickingCompletedWhen
+            ,O.LastEditedBy
+            ,O.LastEditedWhen
+            ,OL.OrderLineID
+            ,OL.OrderID
+            ,OL.StockItemID
+            ,OL.Description
+            ,OL.PackageTypeID
+            ,OL.Quantity
+            ,OL.UnitPrice
+            ,OL.TaxRate
+            ,OL.PickedQuantity
+            ,OL.PickingCompletedWhen
+            ,OL.LastEditedBy
+            ,OL.LastEditedWhen
+        FROM Sales.Orders AS O LEFT JOIN Sales.OrderLines AS OL ON O.OrderID = OL.OrderID '</span>;</code></pre>
+<p>Next, we add each parameter to a table variable like so:</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@whereParameters</span> <span class="hljs-keyword">TABLE</span> (WhereParameter <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">200</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span>);
+
+<span class="hljs-comment">-- If supplied with a Customer ID, add that to the where parameters</span>
+IF (<span class="hljs-variable">@customerID</span> <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span>)
+    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> <span class="hljs-variable">@whereParameters</span>
+    <span class="hljs-keyword">SELECT</span> <span class="hljs-string">' O.CustomerID = @customerID '</span>;
+
+<span class="hljs-comment">-- Additional parameters omitted for brevity.</span></code></pre>
+<p>After we have checked all the parameters, we add them together to form a single where clause and add that to our base SQL statement.</p>
+<pre><code class="hljs language-sql"><span class="hljs-comment">-- If we have any where parameters, concatenate them and add a where clause to the</span>
+<span class="hljs-comment">-- base SQL statement.</span>
+IF (
+        <span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">COUNT</span>(<span class="hljs-number">1</span>)
+        <span class="hljs-keyword">FROM</span> <span class="hljs-variable">@whereParameters</span>
+        ) <span class="hljs-operator">></span> <span class="hljs-number">0</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@whereClause</span> NVARCHAR(MAX) <span class="hljs-operator">=</span> <span class="hljs-string">''</span>;
+
+    <span class="hljs-keyword">SELECT</span> <span class="hljs-variable">@whereClause</span> <span class="hljs-operator">=</span> <span class="hljs-built_in">COALESCE</span>(<span class="hljs-variable">@whereClause</span> <span class="hljs-operator">+</span> WhereParameter <span class="hljs-operator">+</span> <span class="hljs-string">' AND '</span>, <span class="hljs-string">''</span>)
+    <span class="hljs-keyword">FROM</span> <span class="hljs-variable">@whereParameters</span>;
+
+    <span class="hljs-keyword">SET</span> <span class="hljs-variable">@whereClause</span> <span class="hljs-operator">=</span> <span class="hljs-string">'WHERE'</span> <span class="hljs-operator">+</span> <span class="hljs-keyword">LEFT</span>(<span class="hljs-variable">@whereClause</span>, LEN(<span class="hljs-variable">@whereClause</span>) <span class="hljs-operator">-</span> <span class="hljs-number">4</span>);
+    <span class="hljs-keyword">SET</span> <span class="hljs-variable">@sql</span> <span class="hljs-operator">=</span> <span class="hljs-variable">@sql</span> <span class="hljs-operator">+</span> <span class="hljs-variable">@whereClause</span>;
+<span class="hljs-keyword">END</span>;</code></pre>
+<p>We create the parameter list:</p>
+<pre><code class="hljs language-sql"><span class="hljs-comment">-- Declare and hydrate the parameters list.</span>
+<span class="hljs-comment">-- Even if the particular parameter is not included in the query, we can still include it in the parameters list.</span>
+<span class="hljs-comment">-- sp_executesql will happily ignore it.</span>
+<span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@params</span> NVARCHAR(MAX);
+
+<span class="hljs-keyword">SET</span> <span class="hljs-variable">@params</span> <span class="hljs-operator">=</span> N<span class="hljs-string">'@customerID INT, @salesPersonID INT, @contactPersonID INT, @orderDate DATE,
+        @expectedDeliveryDate DATE, @customerPurchaseOrderNumber NVARCHAR(20), @stockItemID INT,
+        @description NVARCHAR(100), @quantity INT, @unitPrice DECIMAL(18,2)'</span>;</code></pre>
+<p>Lastly, we call sp_executesql using our dynamic SQL, the parameter list, and each of the parameters we passed in above.</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> sp_executesql <span class="hljs-variable">@sql</span>
+    ,<span class="hljs-variable">@params</span>
+    ,<span class="hljs-variable">@customerID</span>
+    ,<span class="hljs-variable">@salesPersonID</span>
+    ,<span class="hljs-variable">@contactPersonID</span>
+    ,<span class="hljs-variable">@orderDate</span>
+    ,<span class="hljs-variable">@expectedDeliveryDate</span>
+    ,<span class="hljs-variable">@customerPurchaseOrderNumber</span>
+    ,<span class="hljs-variable">@stockItemID</span>
+    ,<span class="hljs-variable">@description</span>
+    ,<span class="hljs-variable">@quantity</span>
+    ,<span class="hljs-variable">@unitPrice</span>;</code></pre>
+<p>Because we have created fully parameterized SQL, SQL Server will create only one execution plan for each combination of parameters we pass in. Additionally, we can safely pass the NULL parameters, and sp_executesql will ignore those. It is even possible to pass sorting criteria and filter by other tables by adding joins dynamically. (Note: the code included in the Github repository at the end of the article also contains debug logic).</p>
+<h3>The API</h3>
+<p>Our ASP.NET Core 3.1 application already has a connection string to our database available via configuration (and injectable using .NET Core’s built-in dependency injection framework). We also have other conveniences set up.</p>
+<p>Our first step is to define our search model:</p>
+<pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> Order Search Model.</span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">OrderSearchModel</span>
+{
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Customer Id to search for.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span>? CustomerId { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Sales Person Id to search for.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span>? SalesPersonId { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Contact Person Id to search for.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span>? ContactPersonId { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Order Date to search for.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> DateTime? OrderDate { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Expected Delivery Date to search for.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> DateTime? ExpectedDeliveryDate { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Customer Purchase Order Number to search for.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">string</span> CustomerPurchaseOrderNumber { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Stock Item Id to search for.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span>? StockItemId { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Description to search for.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">string</span> Description { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Quantity to search for.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span>? Quantity { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Unit Price to search for.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">decimal</span>? UnitPrice { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+}</code></pre>
+<p>From here, we define our controller endpoint:</p>
+<pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> Searches orders.</span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;param name="searchModel"></span>Search model.<span class="hljs-doctag">&#x3C;/param></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;returns></span>Found orders or <span class="hljs-doctag">&#x3C;c></span>null<span class="hljs-doctag">&#x3C;/c></span> if none found.<span class="hljs-doctag">&#x3C;/returns></span></span>
+[<span class="hljs-meta">HttpGet()</span>]
+[<span class="hljs-meta">Produces(MediaTypeNames.Application.Json)</span>]
+[<span class="hljs-meta">ProducesResponseType(StatusCodes.Status200OK)</span>]
+[<span class="hljs-meta">ProducesResponseType(StatusCodes.Status204NoContent)</span>]
+[<span class="hljs-meta">ProducesResponseType(StatusCodes.Status400BadRequest)</span>]
+<span class="hljs-keyword">public</span> ActionResult&#x3C;IEnumerable&#x3C;Order>> SearchOrders([FromQuery]OrderSearchModel searchModel)
+{
+    <span class="hljs-keyword">try</span>
+    {
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._orderRepository.SearchOrders(searchModel).ToList();
+    }
+    catch (Exception ex)
+    {
+        <span class="hljs-keyword">this</span>._logger.LogError(exception: ex, message: <span class="hljs-string">"Error occurred."</span>);
+        <span class="hljs-keyword">return</span> BadRequest(<span class="hljs-string">"Error occurred."</span>);
+    }
+}</code></pre>
+<p>Now, we need to define our repository method. This is a three-step process.</p>
+<p>First, we need to create a mapper to help Dapper map the result of our stored procedure:</p>
+<pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> Entity One to Many Mapper for use with Dapper.</span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;typeparam name="TParent"></span>Type of the Parent entity.<span class="hljs-doctag">&#x3C;/typeparam></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;typeparam name="TChild"></span>Type of the Child entity.<span class="hljs-doctag">&#x3C;/typeparam></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;typeparam name="TParentKey"></span>Type of the Key of the Parent entity.<span class="hljs-doctag">&#x3C;/typeparam></span></span>
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">EntityOneToManyMapper</span>&#x3C;<span class="hljs-title">TParent</span>,<span class="hljs-title">TChild</span>,<span class="hljs-title">TParentKey</span>>
+{
+    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> <span class="hljs-title">IDictionary</span>&#x3C;<span class="hljs-title">TParentKey</span>, <span class="hljs-title">TParent</span>> _lookup</span> = <span class="hljs-keyword">new</span> Dictionary&#x3C;TParentKey, TParent>();
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Add child action. Supplied at Mapper construction.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> Action&#x3C;TParent, TChild> AddChildAction { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Function to get the Key from the Parent. Supplied at Mapper construction.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-keyword">public</span> Func&#x3C;TParent, TParentKey> ParentKey { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Maps the row. Relies on Dapper to split the row to Parent and Child entities.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;param name="parent"></span>Parent entity.<span class="hljs-doctag">&#x3C;/param></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;param name="child"></span>Child entity.<span class="hljs-doctag">&#x3C;/param></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;returns></span>Mapped Parent entity.<span class="hljs-doctag">&#x3C;/returns></span></span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">virtual</span> TParent <span class="hljs-title">Map</span>(<span class="hljs-params">TParent parent, TChild child</span>)</span>
+    {
+        <span class="hljs-keyword">var</span> found = <span class="hljs-literal">true</span>;
+        <span class="hljs-keyword">var</span> primaryKey = ParentKey(parent);
+
+        <span class="hljs-keyword">if</span> (!_lookup.TryGetValue(primaryKey, <span class="hljs-keyword">out</span> <span class="hljs-keyword">var</span> entity))
+        {
+            _lookup.Add(primaryKey, parent);
+            entity = parent;
+            found = <span class="hljs-literal">false</span>;
+        }
+
+        AddChildAction(entity, child);
+
+        <span class="hljs-keyword">return</span> !found ? entity : <span class="hljs-literal">default</span>(TParent);
+    }
+}</code></pre>
+<p>Then, we add the method signature to the interface for the Order Repository:</p>
+<pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> Interface that describes an Order Repository</span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title">IOrderRepository</span>
+{
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> Searches Orders using the supplied <span class="hljs-doctag">&#x3C;paramref name="searchModel"/></span>.</span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;param name="searchModel"></span>Search Model to use.<span class="hljs-doctag">&#x3C;/param></span></span>
+    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;returns></span>Found records or <span class="hljs-doctag">&#x3C;c></span>null<span class="hljs-doctag">&#x3C;/c></span> if none found.<span class="hljs-doctag">&#x3C;/returns></span></span>
+    <span class="hljs-function">IEnumerable&#x3C;Order> <span class="hljs-title">SearchOrders</span>(<span class="hljs-params">OrderSearchModel searchModel</span>)</span>;
+}</code></pre>
+<p>Last, we wire up the method inside the Order Repository. We only add parameters that have values from the API, and we create a concrete version of the mapper.</p>
+<pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> Searches Orders using the supplied <span class="hljs-doctag">&#x3C;paramref name="searchModel"/></span>.</span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;param name="searchModel"></span>Search Model to use.<span class="hljs-doctag">&#x3C;/param></span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;returns></span>Found records or <span class="hljs-doctag">&#x3C;c></span>null<span class="hljs-doctag">&#x3C;/c></span> if none found.<span class="hljs-doctag">&#x3C;/returns></span></span>
+<span class="hljs-function"><span class="hljs-keyword">public</span> IEnumerable&#x3C;Order> <span class="hljs-title">SearchOrders</span>(<span class="hljs-params">OrderSearchModel searchModel</span>)</span>
+{
+    <span class="hljs-keyword">var</span> mapper = <span class="hljs-keyword">new</span> EntityOneToManyMapper&#x3C;Order, OrderLine, <span class="hljs-built_in">int</span>>()
+    {
+        AddChildAction = (order, orderLine) =>
+        {
+            <span class="hljs-keyword">if</span> (order.OrderLines == <span class="hljs-literal">null</span>)
+            {
+                order.OrderLines = <span class="hljs-keyword">new</span> HashSet&#x3C;OrderLine>();
+            }
+
+            order.OrderLines.Add(orderLine);
+        },
+        ParentKey = (order) => order.OrderId
+    };
+
+    <span class="hljs-keyword">var</span> parameters = <span class="hljs-keyword">new</span> DynamicParameters();
+    <span class="hljs-keyword">if</span> (searchModel.CustomerId.HasValue)
+    {
+        parameters.Add(<span class="hljs-string">"@customerID"</span>, searchModel.CustomerId.Value);
+    }
+
+    <span class="hljs-comment">// Additional parameter additions omitted for brevity</span>
+    <span class="hljs-keyword">using</span> (<span class="hljs-keyword">var</span> connection = Connection)
+    {
+        <span class="hljs-keyword">return</span> connection.Query&#x3C;Order, OrderLine, Order>(<span class="hljs-string">"Sales.SearchOrders"</span>, param: parameters,
+            map: mapper.Map, splitOn: <span class="hljs-string">"OrderLineID"</span>, commandType: CommandType.StoredProcedure).Where(result => result != <span class="hljs-literal">null</span>);
+    }
+}</code></pre>
+<p>Finally, all that is left is to build our code and test the endpoint. As it is a normal RESTful API, we can use a variety of tools to test our GET method, even using Chrome.</p>
+<h2>Conclusion</h2>
+<p>In this article, you have learned how to leverage dynamic SQL to create a flexible stored procedure that can be called from Dapper and used for flexible search needs from a RESTful API. This method can even be extended for use with Entity Framework Core using the <code>FromSqlRaw</code> method. Using this technique allows for plan reuse and flexible searching while avoiding potentially ugly ORM-generated SQL.</p>
+<h2>Additional Reading and Resources</h2>
+<ul>
+<li>Source Code from the article: <a href="https://github.com/danielmallott/flexible-search-with-dapper">https://github.com/danielmallott/flexible-search-with-dapper</a></li>
+<li>Wide World Importers database: <a href="https://github.com/microsoft/sql-server-samples/tree/master/samples/databases/wide-world-importers">https://github.com/microsoft/sql-server-samples/tree/master/samples/databases/wide-world-importers</a></li>
+<li>Brent Ozar on Dynamic SQL: <a href="https://www.brentozar.com/sql/dynamic/">https://www.brentozar.com/sql/dynamic/</a></li>
+<li>Dapper: <a href="https://github.com/StackExchange/Dapper">https://github.com/StackExchange/Dapper</a></li>
+<li>Entity Framework Core Raw SQL: <a href="https://docs.microsoft.com/en-us/ef/core/querying/raw-sql">https://docs.microsoft.com/en-us/ef/core/querying/raw-sql</a></li>
+</ul>
+]]></content:encoded>
+        </item>
+    
+        <item>
+            <guid>https://www.danielmallott.com/posts/logging-generated-sql-in-entity-framework-and-core</guid>
+            <title>Logging Generated SQL in Entity Framework (and Core)</title>
+            <description>Curious about how to log generated SQL in Entity Framework? Take a look at this post that outlines how to do just that in Entity Framework and EF Core</description>
+            <link>https://www.danielmallott.com/posts/logging-generated-sql-in-entity-framework-and-core</link>
+            <pubDate>Fri, 19 Jul 2019 00:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>Logging Generated SQL in Entity Framework (and Core)</h2>
+<p><a href="https://docs.microsoft.com/en-us/ef/core/">Entity Framework Core</a> and <a href="https://docs.microsoft.com/en-us/ef/">Entity Framework</a> get a (somewhat deserved) bad rap from developers and DBAs alike for their occasionally creative approach to generating SQL, especially when faced with a complex LINQ expression. While there are a variety of reasons why Entity Framework struggles with generating SQL, as developers, it is our responsibility to check the generated SQL and at least make sure it makes sense.</p>
+<p>Why else would we want to log the generated SQL? For one, capturing execution statistics can be very valuable for helping to understand how your queries are impacting performance. For another, capturing query text can help tune the query from the database side, whether that function is performed as part of development or later as a DBA function.</p>
+<p>So how do we setup logging for Entity Framework? It depends on whether we are using Entity Framework or Entity Framework Core. Both have a reasonably straightforward setup, although there are key differences.</p>
+<p>Let's start with Entity Framework.</p>
+<h3>Entity Framework</h3>
+<p>Entity Framework allows us to attach a delegate to the <code>Database.Log</code> property of the <code>DbContext</code>, like so:</p>
+<pre><code class="hljs language-c#"><span class="hljs-keyword">public</span> <span class="hljs-keyword">partial</span> <span class="hljs-keyword">class</span> <span class="hljs-title">WideWorldImporters</span> : <span class="hljs-title">DbContext</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">WideWorldImporters</span>(<span class="hljs-params"></span>)</span>
+    {
+        Database.Log = message => Log.Debug(message);
+    }
+
+    <span class="hljs-comment">// Remainder of DbContext elided</span>
+}</code></pre>
+<p>In this case, we are attaching the <code>Log.Debug</code> method from <a href="https://serilog.net/">Serilog</a> to the <code>Log</code> property. Now, whenever we run a query, we will get output to our logs similar to the following.</p>
+<pre><code class="hljs language-c#"><span class="hljs-function"><span class="hljs-keyword">public</span> IEnumerable&#x3C;Order> <span class="hljs-title">GetOrders</span>(<span class="hljs-params"></span>)</span>
+{
+    <span class="hljs-keyword">var</span> results = <span class="hljs-keyword">new</span> List&#x3C;Order>();
+
+    <span class="hljs-keyword">using</span> (<span class="hljs-keyword">var</span> context = <span class="hljs-keyword">new</span> WideWorldImporters())
+    {
+        <span class="hljs-keyword">var</span> query = context.Orders.Take(<span class="hljs-number">100</span>);
+
+        results = query.ToList();
+    }
+
+    <span class="hljs-keyword">return</span> results;
+}</code></pre>
+<img class="blog-image" src="/images/inline-blog/entity-framework-logging-output.png" alt="Entity Framework Logging Output">
+<p>As you can see, we get a pretty good set of information from Entity Framework. We get timing information, such as when the connection was opened, when the query executed, and when the query was closed. Additionally, we get the query text and how long the query took to execute, 142ms in this case.</p>
+<h3>Entity Framework Core</h3>
+<p>With Entity Framework, we had to make our data layer aware of our specific logging framework. While this may not pose too much of a problem, it does pose challenges when it comes to unit testing and may not be ideal in all situations.</p>
+<p>When Microsoft rewrote Entity Framework for .NET Core, creating Entity Framework Core, it applied the same abstraction principle as in other parts of the new framework. Coupled with first-class Dependency Injection, we can now simply inject an interface, <code>ILoggerFactory</code>, to our <code>DbContext</code> and attach it.</p>
+<pre><code class="hljs language-C#"><span class="hljs-keyword">public</span> <span class="hljs-keyword">partial</span> <span class="hljs-keyword">class</span> <span class="hljs-title">WideWorldImportersContext</span> : <span class="hljs-title">DbContext</span>
+{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> ILoggerFactory _loggerFactory;
+
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">WideWorldImportersContext</span>(<span class="hljs-params">DbContextOptions dbContextOptions, ILoggerFactory loggerFactory</span>)
+        : <span class="hljs-title">base</span>(<span class="hljs-params">dbContextOptions</span>)</span>
+    {
+        <span class="hljs-keyword">this</span>._loggerFactory = loggerFactory;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnConfiguring</span>(<span class="hljs-params">DbContextOptionsBuilder optionsBuilder</span>)</span>
+    {
+        optionsBuilder.UseLoggerFactory(<span class="hljs-keyword">this</span>._loggerFactory);
+        <span class="hljs-keyword">base</span>.OnConfiguring(optionsBuilder);
+    }
+
+    <span class="hljs-comment">// Remainder of DbContext elided</span>
+}</code></pre>
+<p>To make it even simpler, <code>ILoggerFactory</code> is registered in the default DI container by the framework, so the only thing we have to do is register our logging framework with the logging pipeline.</p>
+<p>Executing a similar query as above gives us the following output.</p>
+<img class="blog-image" src="/images/inline-blog/entity-framework-core-logging-output.png" alt="Entity Framework Core Logging Output">
+<p>Well, that is certainly more information! In addition to our query, which took 345ms to run, we also get feedback from the framework on possible issues, such as potential type issues and an issue with our LINQ query.</p>
+<h3>Conclusion</h3>
+<p>In this post, we have seen how to log generated SQL from Entity Framework and Entity Framework Core. Additionally, we have seen the additional information we can log. Together, this information can be a valuable tool for helping to ensure our ORMs are not causing performance issues in our applications or databases.</p>
+]]></content:encoded>
+        </item>
+    
+        <item>
+            <guid>https://www.danielmallott.com/posts/entity-framework-core-configuration-options</guid>
+            <title>Entity Framework Core Configuration Options</title>
+            <description>Entity Framework Core offers a ton of configuration options that are not immediately visible. In this post, I explore some of the most useful.</description>
+            <link>https://www.danielmallott.com/posts/entity-framework-core-configuration-options</link>
+            <pubDate>Mon, 15 Jul 2019 00:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>Entity Framework Core Configuration Options</h2>
+<p><a href="https://docs.microsoft.com/en-us/ef/core/">Entity Framework Core</a> offers plenty of configuration options to use when registering your DbContext with the Dependency Injection framework. These options can be used to control various behaviors of Entity Framework Core, from logging detailed exceptions to throwing exceptions when a query is evaluated on the client instead of in the database.</p>
+<p>We'll walk through the most useful configuration options for Entity Framework Core one by one.</p>
+<h3>Configure Warnings</h3>
+<p>The <code>ConfigureWarnings</code> method is incredibly powerful and can help you avoid issues with how queries are executed as well as giving you more insight into how EF Core is actually executing your queries. Its signature looks like the following:</p>
+<pre><code class="hljs language-c#"><span class="hljs-keyword">public</span> <span class="hljs-keyword">virtual</span> Microsoft.EntityFrameworkCore.<span class="hljs-function">DbContextOptionsBuilder <span class="hljs-title">ConfigureWarnings</span> (<span class="hljs-params">Action&#x3C;Microsoft.EntityFrameworkCore.Diagnostics.WarningsConfigurationBuilder> warningsConfigurationBuilderAction</span>)</span>;</code></pre>
+<p>In practice, you can invoke it like the following, in this case configuring it to throw an exception when a query is evaluated client side:</p>
+<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+    {
+        optionsAction.ConfigureWarnings(warningsAction =>
+        {
+            warningsAction.Throw(RelationalEventId.QueryClientEvaluationWarning);
+        });
+    });</code></pre>
+<p>There are four methods for the <code>WarningsConfigurationBuilder</code> as illustrated below:</p>
+<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+    {
+        optionsAction.ConfigureWarnings(warningsAction =>
+        {
+            <span class="hljs-comment">// Specifies the default behavior for any warnings. Can be Ignore, Log, or Throw.</span>
+            warningsAction.Default(WarningBehavior.Ignore);
+ 
+            <span class="hljs-comment">// Specifies the event or events to ignore when they are encountered.</span>
+            warningsAction.Ignore(RelationalEventId.BoolWithDefaultWarning);
+
+            <span class="hljs-comment">// Specifies the event or events to log when they are encountered. </span>
+            warningsAction.Log(RelationalEventId.ValueConversionSqlLiteralWarning);
+
+            <span class="hljs-comment">// Specifies the event or events to throw an exception when they are encountered.</span>
+            warningsAction.Throw(RelationalEventId.QueryClientEvaluationWarning);
+        }); 
+    });</code></pre>
+<p>What are the events you can configure here? They are either <a href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.diagnostics.coreeventid?view=efcore-5.0">Core Events</a> or <a href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.diagnostics.relationaleventid?view=efcore-5.0">Relational Events</a>. Core Events are generally related to the base implementation of the ORM, such as cascade deletes or value generation. Relational Events are events specifically related to Relational Databases, such as transaction usage, migration statistics, and some query statistics.</p>
+<h4>Should I Use These?</h4>
+<p>In general, these will probably clutter up your log way more than you would like. However, there are a couple that are worth logging or throwing an exception when working with earlier versions of Entity Framework Core:</p>
+<ul>
+<li><code>RelationalEventId.QueryClientEvaluationWarning</code><br>
+Use this to detect when a query is being evaluated client side. This is usually due to a function that EF Core cannot convert to SQL. Why is it bad? EF Core pulls more rows out of the database than it will actually end up using, which hurts performance. I like to set this to throw an exception in development and then to log in any higher environment.<br>
+<strong><em>Update: This is no longer logged in Entity Framework Core 3.0 and later.</em></strong></li>
+<li><code>CoreEventId.FirstWithoutOrderByAndFilterWarning</code><br>
+Use this to detect when your query may not produce predictable results. Verify that your query produces only one result, or that you just don't care what is coming back (in the case of an existence check, for example). I like to set this to log in all environments.<br>
+<strong><em>Update: This has been marked <code>Obsolete</code> in Entity Framework Core 3.0.</em></strong></li>
+<li><code>CoreEventId.IncludeIgnoredWarning</code>
+Use this to detect when a requested table is not included. If you are not using the table downstream, you can remove the line of code and improve your code's cleanliness. If you are, you can investigate what is causing EF Core to ignore your include. I like to set this to log in all environments.<br>
+<strong><em>Update: This has been marked <code>Obsolete</code> in Entity Framework Core 3.0.</em></strong></li>
+<li><code>CoreEventId.RowLimitingOperationWithoutOrderByWarning</code>
+Like our FirstWithoutOrderByAndFilterWarning above, use this to detect when your query may not produce predictable results. In this case, tracking down predictability may be more difficult, as the first few pages may look exactly the same every time. I like to set this to throw an exception in development and then to log in any higher environment.<br>
+<strong><em>Update: This has been marked <code>Obsolete</code> in Entity Framework Core 3.0.</em></strong></li>
+</ul>
+<h3>EnableDetailedErrors</h3>
+<p>This option will provide additional detail when an exception is thrown by EF Core during data value operations. These errors are most often due to type mismatch. This option does result in slightly higher query overhead.</p>
+<p>Invoke it like the following:</p>
+<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+    {
+        optionsAction.EnableDetailedErrors();
+    });</code></pre>
+<h4>Should I Use This?</h4>
+<p>In development, this should always be enabled. You should not need it in a higher environment, and its performance hit renders it a sub-optimal choice for production environments.</p>
+<h3>EnableSensitiveDataLogging</h3>
+<p>This option causes application data to be included in log messages, exceptions, etc. During development, this can be very useful for finding bad data or specific cases where the data is causing an issue. However, if you work with any sort of regulatory data (PII, HIPAA, GDPR, etc), <strong><em>use this with extreme caution!</em></strong></p>
+<p>Invoke it like the following:</p>
+<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+    {
+        optionsAction.EnableSensitiveDataLogging();
+    });</code></pre>
+<h4>Should I Use This?</h4>
+<p>Can be very useful in development, as long as you make sure you are following all relevant regulations. <strong><em>Do not use in production. Ever.</em></strong></p>
+<h3>UseLazyLoadingProxies</h3>
+<p>Pretty simple - enables lazy loading in EF Core.</p>
+<p>Invoke it like the following:</p>
+<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+    {
+        optionsAction.UseLazyLoadingProxies();
+    });</code></pre>
+<h4>Should I Use This?</h4>
+<p>This one is purely up to you. There are performance considerations to using lazy loading. I prefer not to use it, mainly to avoid the "N+1" query problem.</p>
+<h3>UseQueryTrackingBehavior</h3>
+<p>This allows you to globally configure the tracking behavior of EF Core. By default, this is set to <code>QueryTrackingBehavior.TrackAll</code>, which results in EF Core providing full change tracking for all entities it creates. However, if your <code>DbContext</code> is only being used for read operations, using the <code>QueryTrackingBehavior.NoTracking</code> option may produce better performance.</p>
+<p>Invoke it like the following:</p>
+<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+    {
+        optionsAction.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+    });</code></pre>
+<h4>Should I Use This?</h4>
+<p>As noted above, if you are only performing read operations (or very few operations that would require tracking), this can provide performance benefits. Otherwise, I would avoid it so that you are not littering your code with <code>AsTracking()</code> calls.</p>
+<h3>In Conclusion</h3>
+<p>We have talked about some of the most useful configuration options for Entity Framework Core. There are additional options for configuring the Service Provider used by the framework; however, this should not generally be used. Using these options can help the performance of EF Core and can help you get more (and more useful) information during development.</p>
+]]></content:encoded>
+        </item>
+    
+      </channel>
+    </rss>
+  
