@@ -9,6 +9,9 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-pro": "^5.15.3",
+    "@microsoft/applicationinsights-react-js": "^3.1.2",
+    "@microsoft/applicationinsights-web": "^2.6.2",
+    "applicationinsights": "^1.8.10",
     "bootstrap": "^5.0.0-beta3",
     "date-fns": "^2.21.1",
     "gray-matter": "^4.0.3",

@@ -1,6 +1,7 @@
 import { AppProps } from 'next/dist/next-server/lib/router/router';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import AppInsightContextProvider from '../components/app-insights-context-provider';
 import { logPageView } from '../lib/ga';
 import '../styles/main.scss';
 
@@ -20,9 +21,9 @@ function MyApp({ Component, pageProps }: AppProps) {
   }, [router.events]);
   
   return (
-    <>
+    <AppInsightContextProvider>
       <Component {...pageProps} />
-    </>
+    </AppInsightContextProvider>
     );
 }
 
