@@ -1,7 +1,7 @@
 import Document, { Html, Head, Main, NextScript } from 'next/document';
 
 class CustomDocument extends Document {
-  render() {
+  render () {
     return (
       <Html>
         <Head>
@@ -19,7 +19,7 @@ class CustomDocument extends Document {
             gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}', {
               page_path: window.location.pathname,
             });
-          `,
+          `
             }}
           />
         </Head>

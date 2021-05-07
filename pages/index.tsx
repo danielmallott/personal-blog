@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { generateRSS } from '../lib/rss';
 import { PostData } from '../models/post-data';
 import fs from 'fs';
+import { SortedPost } from '../models/sorted-post';
 
 export const getStaticProps: GetStaticProps = async (context: any) => {
   const allPostsData = getSortedPostsData();
@@ -23,15 +24,15 @@ export const getStaticProps: GetStaticProps = async (context: any) => {
   };
 }
 
-const Home = ({allPostsData}: any) => (
+const Home = ({ allPostsData }: { allPostsData: SortedPost[] }) => (
   <Layout home>
     <Row>
       <h1>Latest Blog Posts</h1>
       <hr/>
       <Row className="row-cols-1 row-cols-lg-2 row-cols-xl-3 g-1">
-        {allPostsData.map(({id, date, title, summary, tags, headerImage}: 
+        {allPostsData.map(({ id, date, title, summary, tags, headerImage }:
           {id: string, date: string, title: string, summary: string, tags: string, headerImage: string}
-          ) => (
+        ) => (
           <Col key={id}>
             <Link href={`/posts/${id}`}>
               <Card>
@@ -44,7 +45,7 @@ const Home = ({allPostsData}: any) => (
                   <Card.Text>
                     {tags.split(',').map((tag) => (
                         <Badge pill variant="secondary" className="me-1 bg-secondary" key={`${tag}${id}`}>{tag}</Badge>
-                      ))}
+                    ))}
                   </Card.Text>
                 </Card.Body>
                 <Card.Footer>

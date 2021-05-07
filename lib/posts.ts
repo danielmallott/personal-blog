@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import matter, { GrayMatterFile } from 'gray-matter';
+import matter from 'gray-matter';
 import remark from 'remark';
 import html from 'remark-html';
 import { SortedPost } from '../models/sorted-post';
@@ -10,7 +10,7 @@ const highlight = require('remark-highlight.js');
 
 const postsDirectory: string = path.join(process.cwd(), 'posts');
 
-export function getSortedPostsData(): SortedPost[] {
+export function getSortedPostsData (): SortedPost[] {
   const fileNames: string[] = fs.readdirSync(postsDirectory);
   const allPostsData: SortedPost[] = fileNames.map(fileName => {
     const id: string = fileName.replace(/\.md$/, '');
@@ -25,7 +25,7 @@ export function getSortedPostsData(): SortedPost[] {
       date: matterResult.data.date,
       summary: matterResult.data.summary,
       tags: matterResult.data.tags,
-      headerImage: matterResult.data.headerImage,
+      headerImage: matterResult.data.headerImage
     }
   });
 
@@ -39,24 +39,24 @@ export function getSortedPostsData(): SortedPost[] {
 }
 
 /**
- * Gets all post ids. 
- * 
+ * Gets all post ids.
+ *
  * A post id is simply the name of the file with the '.md' stripped off.
  * @returns Post Ids.
  */
-export function getAllPostIds() {
+export function getAllPostIds () {
   const fileNames = fs.readdirSync(postsDirectory);
 
   return fileNames.map(fileName => {
     return {
       params: {
-        id: fileName.replace(/\.md$/, ''),
+        id: fileName.replace(/\.md$/, '')
       }
     }
   });
 }
 
-export async function getPostData(id: string): Promise<PostData> {
+export async function getPostData (id: string): Promise<PostData> {
   const fullPath = path.join(postsDirectory, `${id}.md`);
   const fileContents = fs.readFileSync(fullPath, 'utf-8');
 
@@ -75,6 +75,6 @@ export async function getPostData(id: string): Promise<PostData> {
     date: matterResult.data.date,
     summary: matterResult.data.summary,
     tags: matterResult.data.tags,
-    headerImage: matterResult.data.headerImage,
+    headerImage: matterResult.data.headerImage
   };
 }

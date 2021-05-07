@@ -1,15 +1,15 @@
 import Head from 'next/head';
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { Navbar, Nav, Container, Row, Col } from 'react-bootstrap';
 import Sidebar from './sidebar';
 
 const siteTitle = "Dan Mallott's Blog";
 
-function Layout({children, home}: {children: ReactNode, home?: boolean}) {
+function Layout ({ children, home }: {children: ReactNode, home?: boolean}) {
   return (
     <>
       <Head>
-        <title>Dan Mallott's Blog</title>
+        <title>Dan Mallott&apos;s Blog</title>
         <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <meta name="description" content="Dan Mallott's Blog"/>

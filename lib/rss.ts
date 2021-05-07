@@ -1,7 +1,7 @@
-import { PostData } from "../models/post-data";
+import { PostData } from '../models/post-data';
 
-export async function generateRSSItem(post: PostData) {
-    return `
+export async function generateRSSItem (post: PostData) {
+  return `
         <item>
             <guid>https://www.danielmallott.com/posts/${post.id}</guid>
             <title>${post.title}</title>
@@ -13,10 +13,10 @@ export async function generateRSSItem(post: PostData) {
     `;
 }
 
-export async function generateRSS(posts: PostData[]) {
-    const itemsList = await Promise.all(posts.map(generateRSSItem));
+export async function generateRSS (posts: PostData[]) {
+  const itemsList = await Promise.all(posts.map(generateRSSItem));
 
-    return `
+  return `
     <rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
       <channel>
         <title>Daniel Mallott</title>

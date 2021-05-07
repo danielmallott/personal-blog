@@ -27,13 +27,13 @@ const handleRouteChange = (url: string) => {
   if (!reactPlugin) {
     return;
   }
-  
+
   reactPlugin.trackPageView({
     uri: url
   });
 }
 
-const AppInsightContextProvider = ({children}: {children: ReactNode}) => {
+const AppInsightContextProvider = ({ children }: {children: ReactNode}) => {
   const [isInitialized, setInitialized] = useState(false);
   const router = useRouter();
 
@@ -62,9 +62,9 @@ const AppInsightContextProvider = ({children}: {children: ReactNode}) => {
 
     router.events.on('routeChangeComplete', handleRouteChange);
 
-    return(() => {
+    return () => {
       router.events.off('routeChangeComplete', handleRouteChange);
-    });
+    };
   }, [isInitialized, router.events]);
 
   return (

@@ -5,7 +5,7 @@ import AppInsightContextProvider from '../components/app-insights-context-provid
 import { logPageView } from '../lib/ga';
 import '../styles/main.scss';
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp ({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   useEffect(() => {
@@ -19,12 +19,12 @@ function MyApp({ Component, pageProps }: AppProps) {
       router.events.off('routeChangeComplete', handleRouteChange);
     }
   }, [router.events]);
-  
+
   return (
     <AppInsightContextProvider>
       <Component {...pageProps} />
     </AppInsightContextProvider>
-    );
+  );
 }
 
 export default MyApp

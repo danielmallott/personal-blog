@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import Layout from '../../components/layout';
 import { getAllPostIds, getPostData } from '../../lib/posts';
 import Date from '../../components/date';
@@ -7,7 +7,7 @@ import Link from 'next/link';
 import hljs from 'highlight.js';
 import { PostData } from '../../models/post-data';
 
-export async function getStaticProps({params}: any) {
+export async function getStaticProps ({ params }: any) {
   const postData = await getPostData(params.id);
   return {
     props: {
@@ -16,15 +16,15 @@ export async function getStaticProps({params}: any) {
   };
 };
 
-export async function getStaticPaths() {
+export async function getStaticPaths () {
   const paths = getAllPostIds();
   return {
     paths,
-    fallback: false,
+    fallback: false
   };
 }
 
-function Post({postData}: {postData: PostData}) {
+function Post ({ postData }: {postData: PostData}) {
   useEffect(() => {
     hljs.highlightAll();
   }, []);
