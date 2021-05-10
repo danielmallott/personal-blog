@@ -1,0 +1,10 @@
+Sitemap: https://daniel-mallott-blog.azurewebsites.net/api/posts-sitemap
+
+User-agent: *
+Allow: /*
+Allow: /posts/*
+Allow: /guides/*
+
+Disallow: /api/*
+Disallow: /_next/*
+Disallow: /js

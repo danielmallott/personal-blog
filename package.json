@@ -26,7 +26,8 @@
     "remark": "^13.0.0",
     "remark-highlight.js": "^6.0.0",
     "remark-html": "^13.0.1",
-    "sass": "^1.32.12"
+    "sass": "^1.32.12",
+    "sitemap": "^7.0.0"
   },
   "devDependencies": {
     "@types/gtag.js": "^0.0.4",
