@@ -1,6 +1,6 @@
 const next = require('next')
 const { createServer } = require('http')
-const appInsights = require('applicationInsights')
+const appInsights = require('applicationinsights')
 
 const initAppInsights = (instrumentationKey) => {
   if (!instrumentationKey) {
@@ -49,7 +49,7 @@ const startServer = async (config) => {
 const startTime = Date.now();
 
 const serverConfig = {
-  hostname: 'localhost',
+  hostname: process.env.HOSTNAME || 'localhost',
   port: process.env.PORT || 3000,
   env: process.env.APP_ENV || process.env.NODE_ENV || 'production',
   useAppInsights: initAppInsights(process.env.NEXT_PUBLIC_APPINSIGHTS_INSTRUMENTATIONKEY)
