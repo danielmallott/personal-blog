@@ -5,9 +5,22 @@
         <link>https://www.danielmallott.com</link>
         <description>Talking .NET, SQL Server, and Software Development</description>
         <language>en</language>
-        <lastBuildDate>Fri, 30 Apr 2021 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Wed, 16 Jun 2021 00:00:00 GMT</lastBuildDate>
         <atom:link href="https://www.danielmallott.com" rel="self" type="application/rss+xml"/>
         
+        <item>
+            <guid>https://www.danielmallott.com/posts/why-not-speaking-at-pass-summit-this-year</guid>
+            <title>Why I'm Not Speaking at PASS Summit This Year (But You Should)</title>
+            <description>I'm not speaking at PASS Summit this year, but you should consider submitting a talk</description>
+            <link>https://www.danielmallott.com/posts/why-not-speaking-at-pass-summit-this-year</link>
+            <pubDate>Wed, 16 Jun 2021 00:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>It's been a year (plus)...</h2>
+<p>In case you didn't know, the <a href="https://passdatacommunitysummit.com/speakers">Call for Speakers</a> for the <a href="https://passdatacommunitysummit.com">PASS Data Community Summit</a> has been open since May 27. PASS Summit has been the one of the largest and highest profile annual conferences for data platform professionals, mainly around the Microsoft Data Platform.</p>
+<p>While I have spoken at PASS for the past three years, and it has been an incredibly valuable and rewarding experience, I am not submitting any sessions this year. Why, you ask? To put it very simply, I'm tired, low on ideas, and a bit burnt out on the virtual conference format. For me, the virtual conference format is really hard. Having a live audience is really important to me when I am speaking, and none of the virtual conference formats have really solved the audience participation problem. Last year's PASS Summit was one of the better ones (along with NDC Sydney 2020); it still did not work well for me. Adding on to that, my work (that allows me to speak at all kinds of conferences) has been insanely busy since, well, right around this time last year (feel free to reach out if you're looking for work and are interested in consulting - we are hiring, just like everyone else). While I am normally able to devote some work time to developing new ideas, abstracts, and talks, that just has not been possible over the past year. So it goes.</p>
+<p>All of that being said, you, dear reader, should still consider submitting to speak! The data community is in desperate need of new (and diverse) blood and ideas. PASS Summit is huge, and you will gain valuable experience (not to mention some of the best constructive feedback on your content and delivery). And, as I say to most of my audiences, you have something unique to share that others want to learn! Take the plunge!</p>
+]]></content:encoded>
+        </item>
+    
         <item>
             <guid>https://www.danielmallott.com/posts/new-blog-site</guid>
             <title>A New Blog Site!</title>
