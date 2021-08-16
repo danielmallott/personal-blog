@@ -1,4 +1,4 @@
-import { AppProps } from 'next/dist/next-server/lib/router/router';
+import { AppProps } from 'next/dist/shared/lib/router/router';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import AppInsightContextProvider from '../components/app-insights-context-provider';
@@ -27,4 +27,4 @@ function MyApp ({ Component, pageProps }: AppProps) {
   );
 }
 
-export default MyApp
+export default MyApp;
