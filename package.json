@@ -25,7 +25,7 @@
     "react-twitter-widgets": "^1.10.0",
     "remark": "^13.0.0",
     "remark-highlight.js": "^6.0.0",
-    "remark-html": "^13.0.1",
+    "remark-html": "^13.0.2",
     "sass": "^1.32.12",
     "sitemap": "^7.0.0"
   },
