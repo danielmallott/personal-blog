@@ -5,9 +5,25 @@
         <link>https://www.danielmallott.com</link>
         <description>Talking .NET, SQL Server, and Software Development</description>
         <language>en</language>
-        <lastBuildDate>Wed, 16 Jun 2021 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Mon, 20 Sep 2021 00:00:00 GMT</lastBuildDate>
         <atom:link href="https://www.danielmallott.com" rel="self" type="application/rss+xml"/>
         
+        <item>
+            <guid>https://www.danielmallott.com/posts/reflections-on-kcdc</guid>
+            <title>Reflections on KCDC</title>
+            <description>Attending an in-person conference after a year and a half away was a different experience, but KCDC made it great</description>
+            <link>https://www.danielmallott.com/posts/reflections-on-kcdc</link>
+            <pubDate>Mon, 20 Sep 2021 00:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>Reflections on KCDC</h2>
+<p>I was sitting at lunch last Friday, enjoying some burnt ends, when one of the staff for [KCDC (Kansas City Developer Conference)] (https://www.kcdc.info/) asked me what my favorite part of the conference was. As I chewed my bite and swallowed, it occurred to me that my favorite part of the conference was what had just happened, and, indeed what had been happening all around me for the past few days - spontaneous interaction. While conferences have a schedule of sessions, they all have a hallway track as well. That hallway track is where I find the most value from conferences.</p>
+<p>The online conference format, particularly as implemented by conferences that had previously been in person has been hugely valuable. It represents a true democratization of the conference scene - opening content to people who, for whatever reason, would not have been able to attend an in-person event. While I as a speaker have gotten less out of the online conference format, I truly believe there is a place for them, and they should be here to stay. The challenge organizers will face is having a meaningful hallway track and true engagement from audiences. I don't have any great insights on how best to do that. All I can say is that it is important, particularly for paid conferences.</p>
+<h3>In-person Events in the Time of COVID</h3>
+<p>Probably the most daunting part of conferences in the time of COVID is how to ensure participants are as safe as they can be while sharing indoor rooms with people from around the US/world (aka how to spread an airborne pathogen 101). The organizers for KCDC did a fantastic job. Kansas City also has a mask mandate currently, which helped. The organizers had masks, hand sanitizer, and sanitizing wipes all available throughout the conference. In addition, the Kansas City Convention Center, where the conference was held, had sanitizer and kept things pretty clean. The attendees did their part, too - everyone kept excellent mask discipline (that I saw), with the exception of people who found out of the way corners to take video calls, or the like.</p>
+<h3>What's Next?</h3>
+<p>I had a fantastic time speaking and attending KCDC, and it's helped me be more hopeful for the end of the pandemic and pandemic related restrictions. We are not out of the woods (far from it), but I think the end is in sight. And, this was a great trial run for my bigger travels coming up. I am looking forward to arriving in Prague for [Update Conference 2021] (https://www.updateconference.net/), meeting new people, and seeing old friends.</p>
+]]></content:encoded>
+        </item>
+    
         <item>
             <guid>https://www.danielmallott.com/posts/why-not-speaking-at-pass-summit-this-year</guid>
             <title>Why I'm Not Speaking at PASS Summit This Year (But You Should)</title>
@@ -53,25 +69,25 @@
 <h3>The Stored Procedure</h3>
 <p>First, we write our stored procedure. We are going to place some decently complex logic in here, so we will look at each part in turn.</p>
 <p>The declaration of the stored procedure is as expected. Note that all parameters are optional with a default value of ‘NULL’. The purpose of this will be explained further down.</p>
-<pre><code class="hljs language-sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">PROCEDURE</span> Sales.SearchOrders
-    <span class="hljs-variable">@customerID</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
-    ,<span class="hljs-variable">@salesPersonID</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
-    ,<span class="hljs-variable">@contactPersonID</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
-    ,<span class="hljs-variable">@orderDate</span> <span class="hljs-type">DATE</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
-    ,<span class="hljs-variable">@expectedDeliveryDate</span> <span class="hljs-type">DATE</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
-    ,<span class="hljs-variable">@customerPurchaseOrderNumber</span> NVARCHAR(<span class="hljs-number">20</span>) <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
-    ,<span class="hljs-variable">@stockItemID</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
-    ,<span class="hljs-variable">@description</span> NVARCHAR(<span class="hljs-number">100</span>) <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
-    ,<span class="hljs-variable">@quantity</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
-    ,<span class="hljs-variable">@unitPrice</span> <span class="hljs-type">DECIMAL</span>(<span class="hljs-number">18</span>,<span class="hljs-number">2</span>) <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
-<span class="hljs-keyword">AS</span>
-<span class="hljs-keyword">BEGIN</span></code></pre>
+<pre><code><span>CREATE</span> <span>PROCEDURE</span> Sales.SearchOrders
+    <span>@customerID</span> <span>INT</span> <span>=</span> <span>NULL</span>
+    ,<span>@salesPersonID</span> <span>INT</span> <span>=</span> <span>NULL</span>
+    ,<span>@contactPersonID</span> <span>INT</span> <span>=</span> <span>NULL</span>
+    ,<span>@orderDate</span> <span>DATE</span> <span>=</span> <span>NULL</span>
+    ,<span>@expectedDeliveryDate</span> <span>DATE</span> <span>=</span> <span>NULL</span>
+    ,<span>@customerPurchaseOrderNumber</span> NVARCHAR(<span>20</span>) <span>=</span> <span>NULL</span>
+    ,<span>@stockItemID</span> <span>INT</span> <span>=</span> <span>NULL</span>
+    ,<span>@description</span> NVARCHAR(<span>100</span>) <span>=</span> <span>NULL</span>
+    ,<span>@quantity</span> <span>INT</span> <span>=</span> <span>NULL</span>
+    ,<span>@unitPrice</span> <span>DECIMAL</span>(<span>18</span>,<span>2</span>) <span>=</span> <span>NULL</span>
+<span>AS</span>
+<span>BEGIN</span></code></pre>
 <p>From here, we set up the base of our dynamic SQL statement:</p>
-<pre><code class="hljs language-sql"><span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@sql</span> NVARCHAR(MAX);
+<pre><code><span>DECLARE</span> <span>@sql</span> NVARCHAR(MAX);
 
-<span class="hljs-comment">-- Set our base SQL.</span>
-<span class="hljs-comment">-- Idea is that we want all orders and order lines that fit the criteria</span>
-<span class="hljs-keyword">SET</span> <span class="hljs-variable">@sql</span> <span class="hljs-operator">=</span> <span class="hljs-string">'
+<span>-- Set our base SQL.</span>
+<span>-- Idea is that we want all orders and order lines that fit the criteria</span>
+<span>SET</span> <span>@sql</span> <span>=</span> <span>'
         SELECT O.OrderID
             ,O.CustomerID
             ,O.SalespersonPersonID
@@ -102,207 +118,207 @@
             ,OL.LastEditedWhen
         FROM Sales.Orders AS O LEFT JOIN Sales.OrderLines AS OL ON O.OrderID = OL.OrderID '</span>;</code></pre>
 <p>Next, we add each parameter to a table variable like so:</p>
-<pre><code class="hljs language-sql"><span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@whereParameters</span> <span class="hljs-keyword">TABLE</span> (WhereParameter <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">200</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span>);
+<pre><code><span>DECLARE</span> <span>@whereParameters</span> <span>TABLE</span> (WhereParameter <span>VARCHAR</span>(<span>200</span>) <span>NOT</span> <span>NULL</span>);
 
-<span class="hljs-comment">-- If supplied with a Customer ID, add that to the where parameters</span>
-IF (<span class="hljs-variable">@customerID</span> <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span>)
-    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> <span class="hljs-variable">@whereParameters</span>
-    <span class="hljs-keyword">SELECT</span> <span class="hljs-string">' O.CustomerID = @customerID '</span>;
+<span>-- If supplied with a Customer ID, add that to the where parameters</span>
+IF (<span>@customerID</span> <span>IS</span> <span>NOT</span> <span>NULL</span>)
+    <span>INSERT</span> <span>INTO</span> <span>@whereParameters</span>
+    <span>SELECT</span> <span>' O.CustomerID = @customerID '</span>;
 
-<span class="hljs-comment">-- Additional parameters omitted for brevity.</span></code></pre>
+<span>-- Additional parameters omitted for brevity.</span></code></pre>
 <p>After we have checked all the parameters, we add them together to form a single where clause and add that to our base SQL statement.</p>
-<pre><code class="hljs language-sql"><span class="hljs-comment">-- If we have any where parameters, concatenate them and add a where clause to the</span>
-<span class="hljs-comment">-- base SQL statement.</span>
+<pre><code><span>-- If we have any where parameters, concatenate them and add a where clause to the</span>
+<span>-- base SQL statement.</span>
 IF (
-        <span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">COUNT</span>(<span class="hljs-number">1</span>)
-        <span class="hljs-keyword">FROM</span> <span class="hljs-variable">@whereParameters</span>
-        ) <span class="hljs-operator">></span> <span class="hljs-number">0</span>
-<span class="hljs-keyword">BEGIN</span>
-    <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@whereClause</span> NVARCHAR(MAX) <span class="hljs-operator">=</span> <span class="hljs-string">''</span>;
+        <span>SELECT</span> <span>COUNT</span>(<span>1</span>)
+        <span>FROM</span> <span>@whereParameters</span>
+        ) <span>></span> <span>0</span>
+<span>BEGIN</span>
+    <span>DECLARE</span> <span>@whereClause</span> NVARCHAR(MAX) <span>=</span> <span>''</span>;
 
-    <span class="hljs-keyword">SELECT</span> <span class="hljs-variable">@whereClause</span> <span class="hljs-operator">=</span> <span class="hljs-built_in">COALESCE</span>(<span class="hljs-variable">@whereClause</span> <span class="hljs-operator">+</span> WhereParameter <span class="hljs-operator">+</span> <span class="hljs-string">' AND '</span>, <span class="hljs-string">''</span>)
-    <span class="hljs-keyword">FROM</span> <span class="hljs-variable">@whereParameters</span>;
+    <span>SELECT</span> <span>@whereClause</span> <span>=</span> <span>COALESCE</span>(<span>@whereClause</span> <span>+</span> WhereParameter <span>+</span> <span>' AND '</span>, <span>''</span>)
+    <span>FROM</span> <span>@whereParameters</span>;
 
-    <span class="hljs-keyword">SET</span> <span class="hljs-variable">@whereClause</span> <span class="hljs-operator">=</span> <span class="hljs-string">'WHERE'</span> <span class="hljs-operator">+</span> <span class="hljs-keyword">LEFT</span>(<span class="hljs-variable">@whereClause</span>, LEN(<span class="hljs-variable">@whereClause</span>) <span class="hljs-operator">-</span> <span class="hljs-number">4</span>);
-    <span class="hljs-keyword">SET</span> <span class="hljs-variable">@sql</span> <span class="hljs-operator">=</span> <span class="hljs-variable">@sql</span> <span class="hljs-operator">+</span> <span class="hljs-variable">@whereClause</span>;
-<span class="hljs-keyword">END</span>;</code></pre>
+    <span>SET</span> <span>@whereClause</span> <span>=</span> <span>'WHERE'</span> <span>+</span> <span>LEFT</span>(<span>@whereClause</span>, LEN(<span>@whereClause</span>) <span>-</span> <span>4</span>);
+    <span>SET</span> <span>@sql</span> <span>=</span> <span>@sql</span> <span>+</span> <span>@whereClause</span>;
+<span>END</span>;</code></pre>
 <p>We create the parameter list:</p>
-<pre><code class="hljs language-sql"><span class="hljs-comment">-- Declare and hydrate the parameters list.</span>
-<span class="hljs-comment">-- Even if the particular parameter is not included in the query, we can still include it in the parameters list.</span>
-<span class="hljs-comment">-- sp_executesql will happily ignore it.</span>
-<span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@params</span> NVARCHAR(MAX);
+<pre><code><span>-- Declare and hydrate the parameters list.</span>
+<span>-- Even if the particular parameter is not included in the query, we can still include it in the parameters list.</span>
+<span>-- sp_executesql will happily ignore it.</span>
+<span>DECLARE</span> <span>@params</span> NVARCHAR(MAX);
 
-<span class="hljs-keyword">SET</span> <span class="hljs-variable">@params</span> <span class="hljs-operator">=</span> N<span class="hljs-string">'@customerID INT, @salesPersonID INT, @contactPersonID INT, @orderDate DATE,
+<span>SET</span> <span>@params</span> <span>=</span> N<span>'@customerID INT, @salesPersonID INT, @contactPersonID INT, @orderDate DATE,
         @expectedDeliveryDate DATE, @customerPurchaseOrderNumber NVARCHAR(20), @stockItemID INT,
         @description NVARCHAR(100), @quantity INT, @unitPrice DECIMAL(18,2)'</span>;</code></pre>
 <p>Lastly, we call sp_executesql using our dynamic SQL, the parameter list, and each of the parameters we passed in above.</p>
-<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> sp_executesql <span class="hljs-variable">@sql</span>
-    ,<span class="hljs-variable">@params</span>
-    ,<span class="hljs-variable">@customerID</span>
-    ,<span class="hljs-variable">@salesPersonID</span>
-    ,<span class="hljs-variable">@contactPersonID</span>
-    ,<span class="hljs-variable">@orderDate</span>
-    ,<span class="hljs-variable">@expectedDeliveryDate</span>
-    ,<span class="hljs-variable">@customerPurchaseOrderNumber</span>
-    ,<span class="hljs-variable">@stockItemID</span>
-    ,<span class="hljs-variable">@description</span>
-    ,<span class="hljs-variable">@quantity</span>
-    ,<span class="hljs-variable">@unitPrice</span>;</code></pre>
+<pre><code><span>EXEC</span> sp_executesql <span>@sql</span>
+    ,<span>@params</span>
+    ,<span>@customerID</span>
+    ,<span>@salesPersonID</span>
+    ,<span>@contactPersonID</span>
+    ,<span>@orderDate</span>
+    ,<span>@expectedDeliveryDate</span>
+    ,<span>@customerPurchaseOrderNumber</span>
+    ,<span>@stockItemID</span>
+    ,<span>@description</span>
+    ,<span>@quantity</span>
+    ,<span>@unitPrice</span>;</code></pre>
 <p>Because we have created fully parameterized SQL, SQL Server will create only one execution plan for each combination of parameters we pass in. Additionally, we can safely pass the NULL parameters, and sp_executesql will ignore those. It is even possible to pass sorting criteria and filter by other tables by adding joins dynamically. (Note: the code included in the Github repository at the end of the article also contains debug logic).</p>
 <h3>The API</h3>
 <p>Our ASP.NET Core 3.1 application already has a connection string to our database available via configuration (and injectable using .NET Core’s built-in dependency injection framework). We also have other conveniences set up.</p>
 <p>Our first step is to define our search model:</p>
-<pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> Order Search Model.</span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">OrderSearchModel</span>
+<pre><code><span><span>///</span> <span>&#x3C;summary></span></span>
+<span><span>///</span> Order Search Model.</span>
+<span><span>///</span> <span>&#x3C;/summary></span></span>
+<span>public</span> <span>class</span> <span>OrderSearchModel</span>
 {
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Customer Id to search for.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span>? CustomerId { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Customer Id to search for.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> <span>int</span>? CustomerId { <span>get</span>; <span>set</span>; }
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Sales Person Id to search for.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span>? SalesPersonId { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Sales Person Id to search for.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> <span>int</span>? SalesPersonId { <span>get</span>; <span>set</span>; }
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Contact Person Id to search for.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span>? ContactPersonId { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Contact Person Id to search for.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> <span>int</span>? ContactPersonId { <span>get</span>; <span>set</span>; }
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Order Date to search for.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> DateTime? OrderDate { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Order Date to search for.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> DateTime? OrderDate { <span>get</span>; <span>set</span>; }
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Expected Delivery Date to search for.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> DateTime? ExpectedDeliveryDate { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Expected Delivery Date to search for.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> DateTime? ExpectedDeliveryDate { <span>get</span>; <span>set</span>; }
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Customer Purchase Order Number to search for.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> <span class="hljs-built_in">string</span> CustomerPurchaseOrderNumber { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Customer Purchase Order Number to search for.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> <span>string</span> CustomerPurchaseOrderNumber { <span>get</span>; <span>set</span>; }
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Stock Item Id to search for.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span>? StockItemId { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Stock Item Id to search for.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> <span>int</span>? StockItemId { <span>get</span>; <span>set</span>; }
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Description to search for.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> <span class="hljs-built_in">string</span> Description { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Description to search for.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> <span>string</span> Description { <span>get</span>; <span>set</span>; }
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Quantity to search for.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span>? Quantity { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Quantity to search for.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> <span>int</span>? Quantity { <span>get</span>; <span>set</span>; }
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Unit Price to search for.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> <span class="hljs-built_in">decimal</span>? UnitPrice { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Unit Price to search for.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> <span>decimal</span>? UnitPrice { <span>get</span>; <span>set</span>; }
 }</code></pre>
 <p>From here, we define our controller endpoint:</p>
-<pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> Searches orders.</span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;param name="searchModel"></span>Search model.<span class="hljs-doctag">&#x3C;/param></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;returns></span>Found orders or <span class="hljs-doctag">&#x3C;c></span>null<span class="hljs-doctag">&#x3C;/c></span> if none found.<span class="hljs-doctag">&#x3C;/returns></span></span>
-[<span class="hljs-meta">HttpGet()</span>]
-[<span class="hljs-meta">Produces(MediaTypeNames.Application.Json)</span>]
-[<span class="hljs-meta">ProducesResponseType(StatusCodes.Status200OK)</span>]
-[<span class="hljs-meta">ProducesResponseType(StatusCodes.Status204NoContent)</span>]
-[<span class="hljs-meta">ProducesResponseType(StatusCodes.Status400BadRequest)</span>]
-<span class="hljs-keyword">public</span> ActionResult&#x3C;IEnumerable&#x3C;Order>> SearchOrders([FromQuery]OrderSearchModel searchModel)
+<pre><code><span><span>///</span> <span>&#x3C;summary></span></span>
+<span><span>///</span> Searches orders.</span>
+<span><span>///</span> <span>&#x3C;/summary></span></span>
+<span><span>///</span> <span>&#x3C;param name="searchModel"></span>Search model.<span>&#x3C;/param></span></span>
+<span><span>///</span> <span>&#x3C;returns></span>Found orders or <span>&#x3C;c></span>null<span>&#x3C;/c></span> if none found.<span>&#x3C;/returns></span></span>
+[<span>HttpGet()</span>]
+[<span>Produces(MediaTypeNames.Application.Json)</span>]
+[<span>ProducesResponseType(StatusCodes.Status200OK)</span>]
+[<span>ProducesResponseType(StatusCodes.Status204NoContent)</span>]
+[<span>ProducesResponseType(StatusCodes.Status400BadRequest)</span>]
+<span>public</span> ActionResult&#x3C;IEnumerable&#x3C;Order>> SearchOrders([FromQuery]OrderSearchModel searchModel)
 {
-    <span class="hljs-keyword">try</span>
+    <span>try</span>
     {
-        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._orderRepository.SearchOrders(searchModel).ToList();
+        <span>return</span> <span>this</span>._orderRepository.SearchOrders(searchModel).ToList();
     }
     catch (Exception ex)
     {
-        <span class="hljs-keyword">this</span>._logger.LogError(exception: ex, message: <span class="hljs-string">"Error occurred."</span>);
-        <span class="hljs-keyword">return</span> BadRequest(<span class="hljs-string">"Error occurred."</span>);
+        <span>this</span>._logger.LogError(exception: ex, message: <span>"Error occurred."</span>);
+        <span>return</span> BadRequest(<span>"Error occurred."</span>);
     }
 }</code></pre>
 <p>Now, we need to define our repository method. This is a three-step process.</p>
 <p>First, we need to create a mapper to help Dapper map the result of our stored procedure:</p>
-<pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> Entity One to Many Mapper for use with Dapper.</span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;typeparam name="TParent"></span>Type of the Parent entity.<span class="hljs-doctag">&#x3C;/typeparam></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;typeparam name="TChild"></span>Type of the Child entity.<span class="hljs-doctag">&#x3C;/typeparam></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;typeparam name="TParentKey"></span>Type of the Key of the Parent entity.<span class="hljs-doctag">&#x3C;/typeparam></span></span>
-<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">EntityOneToManyMapper</span>&#x3C;<span class="hljs-title">TParent</span>,<span class="hljs-title">TChild</span>,<span class="hljs-title">TParentKey</span>>
+<pre><code><span><span>///</span> <span>&#x3C;summary></span></span>
+<span><span>///</span> Entity One to Many Mapper for use with Dapper.</span>
+<span><span>///</span> <span>&#x3C;/summary></span></span>
+<span><span>///</span> <span>&#x3C;typeparam name="TParent"></span>Type of the Parent entity.<span>&#x3C;/typeparam></span></span>
+<span><span>///</span> <span>&#x3C;typeparam name="TChild"></span>Type of the Child entity.<span>&#x3C;/typeparam></span></span>
+<span><span>///</span> <span>&#x3C;typeparam name="TParentKey"></span>Type of the Key of the Parent entity.<span>&#x3C;/typeparam></span></span>
+<span>public</span> <span>class</span> <span>EntityOneToManyMapper</span>&#x3C;<span>TParent</span>,<span>TChild</span>,<span>TParentKey</span>>
 {
-    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> <span class="hljs-title">IDictionary</span>&#x3C;<span class="hljs-title">TParentKey</span>, <span class="hljs-title">TParent</span>> _lookup</span> = <span class="hljs-keyword">new</span> Dictionary&#x3C;TParentKey, TParent>();
+    <span><span>private</span> <span>readonly</span> <span>IDictionary</span>&#x3C;<span>TParentKey</span>, <span>TParent</span>> _lookup</span> = <span>new</span> Dictionary&#x3C;TParentKey, TParent>();
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Add child action. Supplied at Mapper construction.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> Action&#x3C;TParent, TChild> AddChildAction { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Add child action. Supplied at Mapper construction.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> Action&#x3C;TParent, TChild> AddChildAction { <span>get</span>; <span>set</span>; }
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Function to get the Key from the Parent. Supplied at Mapper construction.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-keyword">public</span> Func&#x3C;TParent, TParentKey> ParentKey { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Function to get the Key from the Parent. Supplied at Mapper construction.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span>public</span> Func&#x3C;TParent, TParentKey> ParentKey { <span>get</span>; <span>set</span>; }
 
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Maps the row. Relies on Dapper to split the row to Parent and Child entities.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;param name="parent"></span>Parent entity.<span class="hljs-doctag">&#x3C;/param></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;param name="child"></span>Child entity.<span class="hljs-doctag">&#x3C;/param></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;returns></span>Mapped Parent entity.<span class="hljs-doctag">&#x3C;/returns></span></span>
-    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">virtual</span> TParent <span class="hljs-title">Map</span>(<span class="hljs-params">TParent parent, TChild child</span>)</span>
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Maps the row. Relies on Dapper to split the row to Parent and Child entities.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span><span>///</span> <span>&#x3C;param name="parent"></span>Parent entity.<span>&#x3C;/param></span></span>
+    <span><span>///</span> <span>&#x3C;param name="child"></span>Child entity.<span>&#x3C;/param></span></span>
+    <span><span>///</span> <span>&#x3C;returns></span>Mapped Parent entity.<span>&#x3C;/returns></span></span>
+    <span><span>public</span> <span>virtual</span> TParent <span>Map</span>(<span>TParent parent, TChild child</span>)</span>
     {
-        <span class="hljs-keyword">var</span> found = <span class="hljs-literal">true</span>;
-        <span class="hljs-keyword">var</span> primaryKey = ParentKey(parent);
+        <span>var</span> found = <span>true</span>;
+        <span>var</span> primaryKey = ParentKey(parent);
 
-        <span class="hljs-keyword">if</span> (!_lookup.TryGetValue(primaryKey, <span class="hljs-keyword">out</span> <span class="hljs-keyword">var</span> entity))
+        <span>if</span> (!_lookup.TryGetValue(primaryKey, <span>out</span> <span>var</span> entity))
         {
             _lookup.Add(primaryKey, parent);
             entity = parent;
-            found = <span class="hljs-literal">false</span>;
+            found = <span>false</span>;
         }
 
         AddChildAction(entity, child);
 
-        <span class="hljs-keyword">return</span> !found ? entity : <span class="hljs-literal">default</span>(TParent);
+        <span>return</span> !found ? entity : <span>default</span>(TParent);
     }
 }</code></pre>
 <p>Then, we add the method signature to the interface for the Order Repository:</p>
-<pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> Interface that describes an Order Repository</span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-<span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title">IOrderRepository</span>
+<pre><code><span><span>///</span> <span>&#x3C;summary></span></span>
+<span><span>///</span> Interface that describes an Order Repository</span>
+<span><span>///</span> <span>&#x3C;/summary></span></span>
+<span>public</span> <span>interface</span> <span>IOrderRepository</span>
 {
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> Searches Orders using the supplied <span class="hljs-doctag">&#x3C;paramref name="searchModel"/></span>.</span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;param name="searchModel"></span>Search Model to use.<span class="hljs-doctag">&#x3C;/param></span></span>
-    <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;returns></span>Found records or <span class="hljs-doctag">&#x3C;c></span>null<span class="hljs-doctag">&#x3C;/c></span> if none found.<span class="hljs-doctag">&#x3C;/returns></span></span>
-    <span class="hljs-function">IEnumerable&#x3C;Order> <span class="hljs-title">SearchOrders</span>(<span class="hljs-params">OrderSearchModel searchModel</span>)</span>;
+    <span><span>///</span> <span>&#x3C;summary></span></span>
+    <span><span>///</span> Searches Orders using the supplied <span>&#x3C;paramref name="searchModel"/></span>.</span>
+    <span><span>///</span> <span>&#x3C;/summary></span></span>
+    <span><span>///</span> <span>&#x3C;param name="searchModel"></span>Search Model to use.<span>&#x3C;/param></span></span>
+    <span><span>///</span> <span>&#x3C;returns></span>Found records or <span>&#x3C;c></span>null<span>&#x3C;/c></span> if none found.<span>&#x3C;/returns></span></span>
+    <span>IEnumerable&#x3C;Order> <span>SearchOrders</span>(<span>OrderSearchModel searchModel</span>)</span>;
 }</code></pre>
 <p>Last, we wire up the method inside the Order Repository. We only add parameters that have values from the API, and we create a concrete version of the mapper.</p>
-<pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> Searches Orders using the supplied <span class="hljs-doctag">&#x3C;paramref name="searchModel"/></span>.</span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;param name="searchModel"></span>Search Model to use.<span class="hljs-doctag">&#x3C;/param></span></span>
-<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;returns></span>Found records or <span class="hljs-doctag">&#x3C;c></span>null<span class="hljs-doctag">&#x3C;/c></span> if none found.<span class="hljs-doctag">&#x3C;/returns></span></span>
-<span class="hljs-function"><span class="hljs-keyword">public</span> IEnumerable&#x3C;Order> <span class="hljs-title">SearchOrders</span>(<span class="hljs-params">OrderSearchModel searchModel</span>)</span>
+<pre><code><span><span>///</span> <span>&#x3C;summary></span></span>
+<span><span>///</span> Searches Orders using the supplied <span>&#x3C;paramref name="searchModel"/></span>.</span>
+<span><span>///</span> <span>&#x3C;/summary></span></span>
+<span><span>///</span> <span>&#x3C;param name="searchModel"></span>Search Model to use.<span>&#x3C;/param></span></span>
+<span><span>///</span> <span>&#x3C;returns></span>Found records or <span>&#x3C;c></span>null<span>&#x3C;/c></span> if none found.<span>&#x3C;/returns></span></span>
+<span><span>public</span> IEnumerable&#x3C;Order> <span>SearchOrders</span>(<span>OrderSearchModel searchModel</span>)</span>
 {
-    <span class="hljs-keyword">var</span> mapper = <span class="hljs-keyword">new</span> EntityOneToManyMapper&#x3C;Order, OrderLine, <span class="hljs-built_in">int</span>>()
+    <span>var</span> mapper = <span>new</span> EntityOneToManyMapper&#x3C;Order, OrderLine, <span>int</span>>()
     {
         AddChildAction = (order, orderLine) =>
         {
-            <span class="hljs-keyword">if</span> (order.OrderLines == <span class="hljs-literal">null</span>)
+            <span>if</span> (order.OrderLines == <span>null</span>)
             {
-                order.OrderLines = <span class="hljs-keyword">new</span> HashSet&#x3C;OrderLine>();
+                order.OrderLines = <span>new</span> HashSet&#x3C;OrderLine>();
             }
 
             order.OrderLines.Add(orderLine);
@@ -310,17 +326,17 @@ IF (
         ParentKey = (order) => order.OrderId
     };
 
-    <span class="hljs-keyword">var</span> parameters = <span class="hljs-keyword">new</span> DynamicParameters();
-    <span class="hljs-keyword">if</span> (searchModel.CustomerId.HasValue)
+    <span>var</span> parameters = <span>new</span> DynamicParameters();
+    <span>if</span> (searchModel.CustomerId.HasValue)
     {
-        parameters.Add(<span class="hljs-string">"@customerID"</span>, searchModel.CustomerId.Value);
+        parameters.Add(<span>"@customerID"</span>, searchModel.CustomerId.Value);
     }
 
-    <span class="hljs-comment">// Additional parameter additions omitted for brevity</span>
-    <span class="hljs-keyword">using</span> (<span class="hljs-keyword">var</span> connection = Connection)
+    <span>// Additional parameter additions omitted for brevity</span>
+    <span>using</span> (<span>var</span> connection = Connection)
     {
-        <span class="hljs-keyword">return</span> connection.Query&#x3C;Order, OrderLine, Order>(<span class="hljs-string">"Sales.SearchOrders"</span>, param: parameters,
-            map: mapper.Map, splitOn: <span class="hljs-string">"OrderLineID"</span>, commandType: CommandType.StoredProcedure).Where(result => result != <span class="hljs-literal">null</span>);
+        <span>return</span> connection.Query&#x3C;Order, OrderLine, Order>(<span>"Sales.SearchOrders"</span>, param: parameters,
+            map: mapper.Map, splitOn: <span>"OrderLineID"</span>, commandType: CommandType.StoredProcedure).Where(result => result != <span>null</span>);
     }
 }</code></pre>
 <p>Finally, all that is left is to build our code and test the endpoint. As it is a normal RESTful API, we can use a variety of tools to test our GET method, even using Chrome.</p>
@@ -350,55 +366,53 @@ IF (
 <p>Let's start with Entity Framework.</p>
 <h3>Entity Framework</h3>
 <p>Entity Framework allows us to attach a delegate to the <code>Database.Log</code> property of the <code>DbContext</code>, like so:</p>
-<pre><code class="hljs language-c#"><span class="hljs-keyword">public</span> <span class="hljs-keyword">partial</span> <span class="hljs-keyword">class</span> <span class="hljs-title">WideWorldImporters</span> : <span class="hljs-title">DbContext</span>
+<pre><code><span>public</span> <span>partial</span> <span>class</span> <span>WideWorldImporters</span> : <span>DbContext</span>
 {
-    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">WideWorldImporters</span>(<span class="hljs-params"></span>)</span>
+    <span><span>public</span> <span>WideWorldImporters</span>(<span></span>)</span>
     {
         Database.Log = message => Log.Debug(message);
     }
 
-    <span class="hljs-comment">// Remainder of DbContext elided</span>
+    <span>// Remainder of DbContext elided</span>
 }</code></pre>
 <p>In this case, we are attaching the <code>Log.Debug</code> method from <a href="https://serilog.net/">Serilog</a> to the <code>Log</code> property. Now, whenever we run a query, we will get output to our logs similar to the following.</p>
-<pre><code class="hljs language-c#"><span class="hljs-function"><span class="hljs-keyword">public</span> IEnumerable&#x3C;Order> <span class="hljs-title">GetOrders</span>(<span class="hljs-params"></span>)</span>
+<pre><code><span><span>public</span> IEnumerable&#x3C;Order> <span>GetOrders</span>(<span></span>)</span>
 {
-    <span class="hljs-keyword">var</span> results = <span class="hljs-keyword">new</span> List&#x3C;Order>();
+    <span>var</span> results = <span>new</span> List&#x3C;Order>();
 
-    <span class="hljs-keyword">using</span> (<span class="hljs-keyword">var</span> context = <span class="hljs-keyword">new</span> WideWorldImporters())
+    <span>using</span> (<span>var</span> context = <span>new</span> WideWorldImporters())
     {
-        <span class="hljs-keyword">var</span> query = context.Orders.Take(<span class="hljs-number">100</span>);
+        <span>var</span> query = context.Orders.Take(<span>100</span>);
 
         results = query.ToList();
     }
 
-    <span class="hljs-keyword">return</span> results;
+    <span>return</span> results;
 }</code></pre>
-<img class="blog-image" src="/images/inline-blog/entity-framework-logging-output.png" alt="Entity Framework Logging Output">
 <p>As you can see, we get a pretty good set of information from Entity Framework. We get timing information, such as when the connection was opened, when the query executed, and when the query was closed. Additionally, we get the query text and how long the query took to execute, 142ms in this case.</p>
 <h3>Entity Framework Core</h3>
 <p>With Entity Framework, we had to make our data layer aware of our specific logging framework. While this may not pose too much of a problem, it does pose challenges when it comes to unit testing and may not be ideal in all situations.</p>
 <p>When Microsoft rewrote Entity Framework for .NET Core, creating Entity Framework Core, it applied the same abstraction principle as in other parts of the new framework. Coupled with first-class Dependency Injection, we can now simply inject an interface, <code>ILoggerFactory</code>, to our <code>DbContext</code> and attach it.</p>
-<pre><code class="hljs language-C#"><span class="hljs-keyword">public</span> <span class="hljs-keyword">partial</span> <span class="hljs-keyword">class</span> <span class="hljs-title">WideWorldImportersContext</span> : <span class="hljs-title">DbContext</span>
+<pre><code><span>public</span> <span>partial</span> <span>class</span> <span>WideWorldImportersContext</span> : <span>DbContext</span>
 {
-    <span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> ILoggerFactory _loggerFactory;
+    <span>private</span> <span>readonly</span> ILoggerFactory _loggerFactory;
 
-    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">WideWorldImportersContext</span>(<span class="hljs-params">DbContextOptions dbContextOptions, ILoggerFactory loggerFactory</span>)
-        : <span class="hljs-title">base</span>(<span class="hljs-params">dbContextOptions</span>)</span>
+    <span><span>public</span> <span>WideWorldImportersContext</span>(<span>DbContextOptions dbContextOptions, ILoggerFactory loggerFactory</span>)
+        : <span>base</span>(<span>dbContextOptions</span>)</span>
     {
-        <span class="hljs-keyword">this</span>._loggerFactory = loggerFactory;
+        <span>this</span>._loggerFactory = loggerFactory;
     }
 
-    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnConfiguring</span>(<span class="hljs-params">DbContextOptionsBuilder optionsBuilder</span>)</span>
+    <span><span>protected</span> <span>override</span> <span>void</span> <span>OnConfiguring</span>(<span>DbContextOptionsBuilder optionsBuilder</span>)</span>
     {
-        optionsBuilder.UseLoggerFactory(<span class="hljs-keyword">this</span>._loggerFactory);
-        <span class="hljs-keyword">base</span>.OnConfiguring(optionsBuilder);
+        optionsBuilder.UseLoggerFactory(<span>this</span>._loggerFactory);
+        <span>base</span>.OnConfiguring(optionsBuilder);
     }
 
-    <span class="hljs-comment">// Remainder of DbContext elided</span>
+    <span>// Remainder of DbContext elided</span>
 }</code></pre>
 <p>To make it even simpler, <code>ILoggerFactory</code> is registered in the default DI container by the framework, so the only thing we have to do is register our logging framework with the logging pipeline.</p>
 <p>Executing a similar query as above gives us the following output.</p>
-<img class="blog-image" src="/images/inline-blog/entity-framework-core-logging-output.png" alt="Entity Framework Core Logging Output">
 <p>Well, that is certainly more information! In addition to our query, which took 345ms to run, we also get feedback from the framework on possible issues, such as potential type issues and an issue with our LINQ query.</p>
 <h3>Conclusion</h3>
 <p>In this post, we have seen how to log generated SQL from Entity Framework and Entity Framework Core. Additionally, we have seen the additional information we can log. Together, this information can be a valuable tool for helping to ensure our ORMs are not causing performance issues in our applications or databases.</p>
@@ -416,9 +430,9 @@ IF (
 <p>We'll walk through the most useful configuration options for Entity Framework Core one by one.</p>
 <h3>Configure Warnings</h3>
 <p>The <code>ConfigureWarnings</code> method is incredibly powerful and can help you avoid issues with how queries are executed as well as giving you more insight into how EF Core is actually executing your queries. Its signature looks like the following:</p>
-<pre><code class="hljs language-c#"><span class="hljs-keyword">public</span> <span class="hljs-keyword">virtual</span> Microsoft.EntityFrameworkCore.<span class="hljs-function">DbContextOptionsBuilder <span class="hljs-title">ConfigureWarnings</span> (<span class="hljs-params">Action&#x3C;Microsoft.EntityFrameworkCore.Diagnostics.WarningsConfigurationBuilder> warningsConfigurationBuilderAction</span>)</span>;</code></pre>
+<pre><code><span>public</span> <span>virtual</span> Microsoft.EntityFrameworkCore.<span>DbContextOptionsBuilder <span>ConfigureWarnings</span> (<span>Action&#x3C;Microsoft.EntityFrameworkCore.Diagnostics.WarningsConfigurationBuilder> warningsConfigurationBuilderAction</span>)</span>;</code></pre>
 <p>In practice, you can invoke it like the following, in this case configuring it to throw an exception when a query is evaluated client side:</p>
-<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+<pre><code>services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
         optionsAction.ConfigureWarnings(warningsAction =>
         {
@@ -426,20 +440,20 @@ IF (
         });
     });</code></pre>
 <p>There are four methods for the <code>WarningsConfigurationBuilder</code> as illustrated below:</p>
-<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+<pre><code>services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
         optionsAction.ConfigureWarnings(warningsAction =>
         {
-            <span class="hljs-comment">// Specifies the default behavior for any warnings. Can be Ignore, Log, or Throw.</span>
+            <span>// Specifies the default behavior for any warnings. Can be Ignore, Log, or Throw.</span>
             warningsAction.Default(WarningBehavior.Ignore);
  
-            <span class="hljs-comment">// Specifies the event or events to ignore when they are encountered.</span>
+            <span>// Specifies the event or events to ignore when they are encountered.</span>
             warningsAction.Ignore(RelationalEventId.BoolWithDefaultWarning);
 
-            <span class="hljs-comment">// Specifies the event or events to log when they are encountered. </span>
+            <span>// Specifies the event or events to log when they are encountered. </span>
             warningsAction.Log(RelationalEventId.ValueConversionSqlLiteralWarning);
 
-            <span class="hljs-comment">// Specifies the event or events to throw an exception when they are encountered.</span>
+            <span>// Specifies the event or events to throw an exception when they are encountered.</span>
             warningsAction.Throw(RelationalEventId.QueryClientEvaluationWarning);
         }); 
     });</code></pre>
@@ -463,7 +477,7 @@ Like our FirstWithoutOrderByAndFilterWarning above, use this to detect when your
 <h3>EnableDetailedErrors</h3>
 <p>This option will provide additional detail when an exception is thrown by EF Core during data value operations. These errors are most often due to type mismatch. This option does result in slightly higher query overhead.</p>
 <p>Invoke it like the following:</p>
-<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+<pre><code>services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
         optionsAction.EnableDetailedErrors();
     });</code></pre>
@@ -472,7 +486,7 @@ Like our FirstWithoutOrderByAndFilterWarning above, use this to detect when your
 <h3>EnableSensitiveDataLogging</h3>
 <p>This option causes application data to be included in log messages, exceptions, etc. During development, this can be very useful for finding bad data or specific cases where the data is causing an issue. However, if you work with any sort of regulatory data (PII, HIPAA, GDPR, etc), <strong><em>use this with extreme caution!</em></strong></p>
 <p>Invoke it like the following:</p>
-<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+<pre><code>services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
         optionsAction.EnableSensitiveDataLogging();
     });</code></pre>
@@ -481,7 +495,7 @@ Like our FirstWithoutOrderByAndFilterWarning above, use this to detect when your
 <h3>UseLazyLoadingProxies</h3>
 <p>Pretty simple - enables lazy loading in EF Core.</p>
 <p>Invoke it like the following:</p>
-<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+<pre><code>services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
         optionsAction.UseLazyLoadingProxies();
     });</code></pre>
@@ -490,7 +504,7 @@ Like our FirstWithoutOrderByAndFilterWarning above, use this to detect when your
 <h3>UseQueryTrackingBehavior</h3>
 <p>This allows you to globally configure the tracking behavior of EF Core. By default, this is set to <code>QueryTrackingBehavior.TrackAll</code>, which results in EF Core providing full change tracking for all entities it creates. However, if your <code>DbContext</code> is only being used for read operations, using the <code>QueryTrackingBehavior.NoTracking</code> option may produce better performance.</p>
 <p>Invoke it like the following:</p>
-<pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
+<pre><code>services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
         optionsAction.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     });</code></pre>
