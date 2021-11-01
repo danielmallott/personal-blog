@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm install
 
-FROM node:alpine AS builder
+FROM node:16-alpine AS builder
 WORKDIR /app
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
