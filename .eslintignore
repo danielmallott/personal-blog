@@ -3,3 +3,7 @@
 /public/**
 **/*.scss
 /node_modules/**
+/node_modules/*
+/.next/**
+/.github/**
+node_modules
