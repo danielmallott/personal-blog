@@ -1,12 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import remark from 'remark';
+import { remark } from 'remark';
 import html from 'remark-html';
 import { SortedPost } from '../models/sorted-post';
 import { PostData } from '../models/post-data';
-
-const highlight = require('remark-highlight.js');
+import highlight from 'remark-highlight.js';
 
 const postsDirectory: string = path.join(process.cwd(), 'posts');
 
