@@ -15,12 +15,12 @@
             <link>https://www.danielmallott.com/posts/reflections-on-kcdc</link>
             <pubDate>Mon, 20 Sep 2021 00:00:00 GMT</pubDate>
             <content:encoded><![CDATA[<h2>Reflections on KCDC</h2>
-<p>I was sitting at lunch last Friday, enjoying some burnt ends, when one of the staff for [KCDC (Kansas City Developer Conference)] (https://www.kcdc.info/) asked me what my favorite part of the conference was. As I chewed my bite and swallowed, it occurred to me that my favorite part of the conference was what had just happened, and, indeed what had been happening all around me for the past few days - spontaneous interaction. While conferences have a schedule of sessions, they all have a hallway track as well. That hallway track is where I find the most value from conferences.</p>
+<p>I was sitting at lunch last Friday, enjoying some burnt ends, when one of the staff for <a href="https://www.kcdc.info/">KCDC (Kansas City Developer Conference)</a> asked me what my favorite part of the conference was. As I chewed my bite and swallowed, it occurred to me that my favorite part of the conference was what had just happened, and, indeed what had been happening all around me for the past few days - spontaneous interaction. While conferences have a schedule of sessions, they all have a hallway track as well. That hallway track is where I find the most value from conferences.</p>
 <p>The online conference format, particularly as implemented by conferences that had previously been in person has been hugely valuable. It represents a true democratization of the conference scene - opening content to people who, for whatever reason, would not have been able to attend an in-person event. While I as a speaker have gotten less out of the online conference format, I truly believe there is a place for them, and they should be here to stay. The challenge organizers will face is having a meaningful hallway track and true engagement from audiences. I don't have any great insights on how best to do that. All I can say is that it is important, particularly for paid conferences.</p>
 <h3>In-person Events in the Time of COVID</h3>
 <p>Probably the most daunting part of conferences in the time of COVID is how to ensure participants are as safe as they can be while sharing indoor rooms with people from around the US/world (aka how to spread an airborne pathogen 101). The organizers for KCDC did a fantastic job. Kansas City also has a mask mandate currently, which helped. The organizers had masks, hand sanitizer, and sanitizing wipes all available throughout the conference. In addition, the Kansas City Convention Center, where the conference was held, had sanitizer and kept things pretty clean. The attendees did their part, too - everyone kept excellent mask discipline (that I saw), with the exception of people who found out of the way corners to take video calls, or the like.</p>
 <h3>What's Next?</h3>
-<p>I had a fantastic time speaking and attending KCDC, and it's helped me be more hopeful for the end of the pandemic and pandemic related restrictions. We are not out of the woods (far from it), but I think the end is in sight. And, this was a great trial run for my bigger travels coming up. I am looking forward to arriving in Prague for [Update Conference 2021] (https://www.updateconference.net/), meeting new people, and seeing old friends.</p>
+<p>I had a fantastic time speaking and attending KCDC, and it's helped me be more hopeful for the end of the pandemic and pandemic related restrictions. We are not out of the woods (far from it), but I think the end is in sight. And, this was a great trial run for my bigger travels coming up. I am looking forward to arriving in Prague for <a href="https://www.updateconference.net/">Update Conference 2021</a>, meeting new people, and seeing old friends.</p>
 ]]></content:encoded>
         </item>
     
@@ -240,7 +240,7 @@ IF (
     {
         <span>return</span> <span>this</span>._orderRepository.SearchOrders(searchModel).ToList();
     }
-    catch (Exception ex)
+    <span>catch</span> (Exception ex)
     {
         <span>this</span>._logger.LogError(exception: ex, message: <span>"Error occurred."</span>);
         <span>return</span> BadRequest(<span>"Error occurred."</span>);
@@ -256,7 +256,7 @@ IF (
 <span><span>///</span> <span>&#x3C;typeparam name="TParentKey"></span>Type of the Key of the Parent entity.<span>&#x3C;/typeparam></span></span>
 <span>public</span> <span>class</span> <span>EntityOneToManyMapper</span>&#x3C;<span>TParent</span>,<span>TChild</span>,<span>TParentKey</span>>
 {
-    <span><span>private</span> <span>readonly</span> <span>IDictionary</span>&#x3C;<span>TParentKey</span>, <span>TParent</span>> _lookup</span> = <span>new</span> Dictionary&#x3C;TParentKey, TParent>();
+    <span>private</span> <span>readonly</span> IDictionary&#x3C;TParentKey, TParent> _lookup = <span>new</span> Dictionary&#x3C;TParentKey, TParent>();
 
     <span><span>///</span> <span>&#x3C;summary></span></span>
     <span><span>///</span> Add child action. Supplied at Mapper construction.</span>
@@ -368,7 +368,7 @@ IF (
 <p>Entity Framework allows us to attach a delegate to the <code>Database.Log</code> property of the <code>DbContext</code>, like so:</p>
 <pre><code><span>public</span> <span>partial</span> <span>class</span> <span>WideWorldImporters</span> : <span>DbContext</span>
 {
-    <span><span>public</span> <span>WideWorldImporters</span>(<span></span>)</span>
+    <span><span>public</span> <span>WideWorldImporters</span>()</span>
     {
         Database.Log = message => Log.Debug(message);
     }
@@ -376,7 +376,7 @@ IF (
     <span>// Remainder of DbContext elided</span>
 }</code></pre>
 <p>In this case, we are attaching the <code>Log.Debug</code> method from <a href="https://serilog.net/">Serilog</a> to the <code>Log</code> property. Now, whenever we run a query, we will get output to our logs similar to the following.</p>
-<pre><code><span><span>public</span> IEnumerable&#x3C;Order> <span>GetOrders</span>(<span></span>)</span>
+<pre><code><span><span>public</span> IEnumerable&#x3C;Order> <span>GetOrders</span>()</span>
 {
     <span>var</span> results = <span>new</span> List&#x3C;Order>();
 

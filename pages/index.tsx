@@ -44,7 +44,7 @@ const Home = ({ allPostsData }: { allPostsData: SortedPost[] }) => (
                   </Card.Text>
                   <Card.Text>
                     {tags.split(',').map((tag) => (
-                        <Badge pill variant="secondary" className="me-1 bg-secondary" key={`${tag}${id}`}>{tag}</Badge>
+                        <Badge pill bg="secondary" className="me-1 bg-secondary" key={`${tag}${id}`}>{tag}</Badge>
                     ))}
                   </Card.Text>
                 </Card.Body>
