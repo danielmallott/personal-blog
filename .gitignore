@@ -18,6 +18,7 @@
 # misc
 .DS_Store
 *.pem
+thumbs.db
 
 # debug
 npm-debug.log*
