@@ -1,4 +1,5 @@
-import Document, { Html, Head, Main, NextScript } from 'next/document';
+import { Html, Head, Main, NextScript } from 'next/document';
+import Document from 'next/dist/pages/_document';
 
 class CustomDocument extends Document {
   render () {
