@@ -34,7 +34,7 @@ const Home = ({ allPostsData }: { allPostsData: SortedPost[] }) => (
           {id: string, date: string, title: string, summary: string, tags: string, headerImage: string}
         ) => (
           <Col key={id}>
-            <Link href={`/posts/${id}`}>
+            <Link href={`/posts/${id}`} passHref>
               <Card>
                 <Card.Img variant="top" src={headerImage} className="card-img-top"/>
                 <Card.Body>
