@@ -18,7 +18,7 @@ Traditionally, even systems that perform data access only through stored procedu
 
 ## Approach
 
-So how do we avoid these issues? We combine two concepts: executing Dynamic SQL with sp_executesql and using Dapper as a lightweight ORM to map objects. Together, these will allow us to search using a flexible combination of terms without code or plan bloat.
+So how do we avoid these issues? We combine two concepts: executing Dynamic SQL with `sp_executesql` and using Dapper as a lightweight ORM to map objects. Together, these will allow us to search using a flexible combination of terms without code or plan bloat.
 
 ## Requirements
 
@@ -30,7 +30,7 @@ We are building an API using .NET Core on the Wide World Importers database. We 
 
 First, we write our stored procedure. We are going to place some decently complex logic in here, so we will look at each part in turn.
 
-The declaration of the stored procedure is as expected. Note that all parameters are optional with a default value of ‘NULL’. The purpose of this will be explained further down.
+The declaration of the stored procedure is as expected. Note that all parameters are optional with a default value of `NULL`. The purpose of this will be explained further down.
 
 ```sql
 CREATE PROCEDURE Sales.SearchOrders
@@ -133,7 +133,7 @@ SET @params = N'@customerID INT, @salesPersonID INT, @contactPersonID INT, @orde
         @description NVARCHAR(100), @quantity INT, @unitPrice DECIMAL(18,2)';
 ```
 
-Lastly, we call sp_executesql using our dynamic SQL, the parameter list, and each of the parameters we passed in above.
+Lastly, we call `sp_executesql` using our dynamic SQL, the parameter list, and each of the parameters we passed in above.
 
 ```sql
 EXEC sp_executesql @sql
@@ -150,7 +150,7 @@ EXEC sp_executesql @sql
     ,@unitPrice;
 ```
 
-Because we have created fully parameterized SQL, SQL Server will create only one execution plan for each combination of parameters we pass in. Additionally, we can safely pass the NULL parameters, and sp_executesql will ignore those. It is even possible to pass sorting criteria and filter by other tables by adding joins dynamically. (Note: the code included in the Github repository at the end of the article also contains debug logic).
+Because we have created fully parameterized SQL, SQL Server will create only one execution plan for each combination of parameters we pass in. Additionally, we can safely pass the NULL parameters, and `sp_executesql` will ignore those. It is even possible to pass sorting criteria and filter by other tables by adding joins dynamically. (Note: the code included in the Github repository at the end of the article also contains debug logic).
 
 ### The API
 
