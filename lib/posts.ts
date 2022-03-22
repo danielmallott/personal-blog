@@ -31,8 +31,10 @@ export function getSortedPostsData (): SortedPost[] {
   return allPostsData.sort((a: SortedPost, b: SortedPost) => {
     if (a.date < b.date) {
       return 1;
-    } else {
+    } else if (a.date > b.date) {
       return -1;
+    } else {
+      return 0;
     }
   });
 }
