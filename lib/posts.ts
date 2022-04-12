@@ -65,7 +65,7 @@ export async function getPostData (id: string): Promise<PostData> {
 
   const processedContent = await remark()
     .use(highlight)
-    .use(html)
+    .use(html, { sanitize: false })
     .process(matterResult.content);
   const contentHtml = processedContent.toString();
 

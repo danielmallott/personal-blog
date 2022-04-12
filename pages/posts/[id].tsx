@@ -26,6 +26,9 @@ export async function getStaticPaths () {
 
 function Post ({ postData }: {postData: PostData}) {
   useEffect(() => {
+    hljs.configure({
+      ignoreUnescapedHTML: true
+    });
     hljs.highlightAll();
   }, []);
   return (
