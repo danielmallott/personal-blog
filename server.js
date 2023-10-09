@@ -24,7 +24,7 @@ const startServer = async (config) => {
   };
 
   const app = await next(serverOptions);
-  const handleNextRequests = app.getRequestHandler();
+  const handleNextRequests = await app.getRequestHandler();
 
   const srv = createServer((req, res) => {
     if (config.useAppInsights) {
