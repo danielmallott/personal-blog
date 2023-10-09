@@ -23,7 +23,7 @@ const startServer = async (config) => {
     quiet: false
   };
 
-  const app = next(serverOptions);
+  const app = await next(serverOptions);
   const handleNextRequests = app.getRequestHandler();
 
   const srv = createServer((req, res) => {
