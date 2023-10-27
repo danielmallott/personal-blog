@@ -5,9 +5,338 @@
         <link>https://www.danielmallott.com</link>
         <description>Talking .NET, SQL Server, and Software Development</description>
         <language>en</language>
-        <lastBuildDate>Tue, 12 Apr 2022 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Fri, 27 Oct 2023 00:00:00 GMT</lastBuildDate>
         <atom:link href="https://www.danielmallott.com" rel="self" type="application/rss+xml"/>
         
+        <item>
+            <guid>https://www.danielmallott.com/posts/unit-testing-your-database</guid>
+            <title>Why You Should Unit Test Your Database</title>
+            <description>If you have business logic in your database (and you do), you should be testing that. We'll explore how to do that with Microsoft SQL Server in this post.</description>
+            <link>https://www.danielmallott.com/posts/unit-testing-your-database</link>
+            <pubDate>Fri, 27 Oct 2023 00:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>Unit Testing</h2>
+<p>Unit Testing, also known as Component Testing, is a level of software testing where individual units or components of a software system are tested. A unit is the smallest piece of code that can be logically isolated in a system. In traditional software development, we often write unit tests on <em>functions</em> within <em>classes</em>.</p>
+<p>A good unit testing suite can help developers find issues early (i.e., push left), create a code contract protecting against unintended changes, ensure adherence to acceptance criteria, and provide a living documentation of how code is meant to be consumed.</p>
+<p>However, developers often skip writing unit tests or do not create comprehensive unit test suites. Reasons for this include that they do not (necessarily) catch integration issues, realistic unit tests can be difficult to set up, and there can be significant extra development effort associated with writing unit tests.</p>
+<p>When it comes to testing database code, we have traditionally lagged <em>far</em> behind our application developer brethren, writing code and then doing some ad hoc testing and calling it good. The reality is we should be practicing the same rigor application developers do and testing the business logic in our databases. This business logic is often encapsulated in stored procedures, but may also be in functions, constraints, or even foreign keys. Sometimes there are complicated calculations living inside the database that are barely tested after being written. All of these things are vulnerable to schema changes or version upgrades, and the last thing we want is to get a 3:00AM page because the monthly/quarterly/yearly financial report started throwing out wrong results! Unit testing can be part of the answer to these problems!</p>
+<h3>Good Unit Tests</h3>
+<p>Good unit tests have six key features (there may be more, but these are the ones I've chosen to focus on):</p>
+<ul>
+<li>They should be automated and able to run without developer intervention</li>
+<li>They should be granular and only test one branch at a time</li>
+<li>They should be fast and execute very quickly</li>
+<li>They should be isolated and only test the code that is meant to be tested</li>
+<li>They should be deterministic and produce the same result every time</li>
+<li>They should be independent and not rely on being executed in a specific order</li>
+</ul>
+<h3>Basics of Unit Testing</h3>
+<p>Every unit test will have the same basic pattern:</p>
+<ol>
+<li>(Optionally) Arrange</li>
+<li>Act</li>
+<li>Assert</li>
+</ol>
+<pre><code class="hljs language-c#">[<span class="hljs-meta">Fact</span>]
+<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Test_GetMessage</span>()</span>
+{
+    <span class="hljs-comment">// Arrange</span>
+    <span class="hljs-keyword">var</span> testName = <span class="hljs-string">"World"</span>;
+    <span class="hljs-keyword">var</span> expected = <span class="hljs-string">"Hello, World"</span>;
+    <span class="hljs-keyword">var</span> generator = <span class="hljs-keyword">new</span> MessageGenerator();
+
+    <span class="hljs-comment">// Act</span>
+    <span class="hljs-keyword">var</span> result = generator.GetMessage(testName);
+
+    <span class="hljs-comment">// Assert</span>
+    Assert.Equal(expected, result);
+}</code></pre>
+<h4>Arrange</h4>
+<p>In the arrange step, we set up everything needed to successfully execute the test. This includes setting up preconditions, such as functions or procedures that need to run beforehand, creating testing data, and mocking any dependencies. Why do we mock dependencies? Remember, we want to <em>isolate</em> our tests to only the code under test, so any dependencies should return <em>expected</em> data or status codes.</p>
+<blockquote>
+<p>NOTE: The Arrange step is not necessary if you can simply invoke the code under test with no setup, hence it being optional.</p>
+</blockquote>
+<h4>Act</h4>
+<p>In the Act step, we actually invoke the code under test, using the data from the Arrange step, if needed. Just as importantly, we will record the results, as we will need to review them later in the Assert step.</p>
+<blockquote>
+<p>NOTE: In certain circumstances, such as testing for an error being thrown, we may not need to record the results, if our testing framework takes care of that for us.</p>
+</blockquote>
+<h4>Assert</h4>
+<p>In the Assert step, we check to see if the results of the function or procedure match what we expected. If they do, the test passes; if not, it fails.</p>
+<h3>Manual Unit Tests in T-SQL</h3>
+<p>Setting up unit tests in T-SQL is relatively easy, and you can adapt the simple testing you already do for your scripts.</p>
+<p>For these examples, we'll use the Wide World Importers database provided as an example of best practices by Microsoft. You can find the setup scripts <a href="http://go.microsoft.com/fwlink/?LinkID=800630">here</a>.</p>
+<p>Now, suppose you have an application that needs to insert people into the <code>Application.People</code> table, and your developers are not using an ORM, or are using something like <a href="https://github.com/DapperLib/Dapper">Dapper</a>. You would write a stored procedure to do this, and it might look like the following:</p>
+<pre><code class="hljs language-sql">USE WideWorldImporters;
+GO
+
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">PROCEDURE</span> dbo.InsertPerson
+    <span class="hljs-variable">@fullName</span> NVARCHAR(<span class="hljs-number">50</span>),
+    <span class="hljs-variable">@preferredName</span> NVARCHAR(<span class="hljs-number">50</span>),
+    <span class="hljs-variable">@isEmployee</span> BIT,
+    <span class="hljs-variable">@lastEditedBy</span> <span class="hljs-type">INT</span>
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-keyword">SET</span> NOCOUNT <span class="hljs-keyword">ON</span>;
+
+    <span class="hljs-comment">-- Perform basic validation on required field</span>
+    IF (<span class="hljs-variable">@fullName</span> <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NULL</span>)
+        THROW <span class="hljs-number">50001</span>, <span class="hljs-string">'@fullName must not be null'</span>, <span class="hljs-number">1</span>;
+
+    <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@InsertedId</span> <span class="hljs-keyword">TABLE</span> (InsertedID <span class="hljs-type">INT</span>);
+    
+    <span class="hljs-comment">-- Insert new row, capturing the new identity</span>
+    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> Application.People
+    (FullName, PreferredName, IsPermittedToLogon, IsExternalLogonProvider, IsSystemUser, IsEmployee, IsSalesperson, LastEditedBy)
+    OUTPUT inserted.PersonID <span class="hljs-keyword">INTO</span> <span class="hljs-variable">@InsertedId</span>
+    <span class="hljs-keyword">VALUES</span>
+    (<span class="hljs-variable">@fullName</span>, <span class="hljs-variable">@preferredName</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-variable">@isEmployee</span>, <span class="hljs-number">0</span>, <span class="hljs-variable">@lastEditedBy</span>);
+
+    <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@result</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> (<span class="hljs-keyword">SELECT</span> TOP (<span class="hljs-number">1</span>) InsertedID <span class="hljs-keyword">FROM</span> <span class="hljs-variable">@InsertedId</span>);
+    <span class="hljs-keyword">RETURN</span> <span class="hljs-variable">@result</span>;
+<span class="hljs-keyword">END</span>;
+GO</code></pre>
+<p>Now, while this is a simple stored procedure, we will want to test it, to make sure the error is thrown and to make sure data is inserted successfully.</p>
+<p>To test if the error is thrown, we might write something like:</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> dbo.InsertPerson <span class="hljs-keyword">NULL</span>, <span class="hljs-keyword">NULL</span>, <span class="hljs-keyword">NULL</span>, <span class="hljs-keyword">NULL</span>;</code></pre>
+<p>And when we execute it, we will observe the error thrown in the Results pane in SSMS or Azure Data Studio.</p>
+<p>Similarly, for testing if the stored procedure works with valid values, we can write something like:</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">BEGIN</span> TRANSACTION;
+<span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@newPersonId</span> <span class="hljs-type">INT</span>;
+<span class="hljs-keyword">EXEC</span> <span class="hljs-variable">@newPersonId</span> <span class="hljs-operator">=</span> dbo.InsertPerson <span class="hljs-string">'Test'</span>, <span class="hljs-string">'TestUser'</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>;
+<span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> Application.People <span class="hljs-keyword">WHERE</span> PersonID <span class="hljs-operator">=</span> <span class="hljs-variable">@newPersonId</span>;
+<span class="hljs-keyword">ROLLBACK</span>;</code></pre>
+<p>This is fairly cumbersome, and not particularly automatable, although you can group all your scripts in a single folder and write some Powershell (or other scripting language) like this to run all the scripts:</p>
+<pre><code class="hljs language-powershell"><span class="hljs-built_in">Get-ChildItem</span> <span class="hljs-literal">-Path</span> ./src/Tests/WideWorldImporters <span class="hljs-literal">-Force</span> | <span class="hljs-built_in">ForEach-Object</span> <span class="hljs-literal">-Process</span> {
+    <span class="hljs-built_in">Invoke-Sqlcmd</span> <span class="hljs-literal">-InputFile</span> <span class="hljs-variable">$_</span>.FullName <span class="hljs-literal">-ConnectionString</span> <span class="hljs-string">"Data Source=localhost;Initial Catalog=WideWorldImporters;User Id=&#x3C;user id here>;Password=&#x3C;password here>;TrustServerCertificate=true"</span>
+}</code></pre>
+<h3>Automating Unit Tests With tSQLt</h3>
+<p>Writing unit tests manually and managing database state is not bad for small applications or when there are few developers; however, if you scale your team(s) or start writing lots of stored procedures and functions, writing manual tests starts to become a major challenge.</p>
+<p>Enter <a href="https://tsqlt.org/">tSQLt</a>! tSQLt is an open source database unit testing framework specifically written for SQL Server. tSQLt gives us tools to help automate the <em>Arrange</em> and <em>Assert</em> steps, so we do not have to manually manage transactions or write complicated select statements to make sure two tabular results match.</p>
+<p>How does it do this? tSQLt introduces a mocking framework, allowing us to replace functions, stored procedures, and tables with "fake" versions, so we can control the output or isolate our database from changes made during the test run. tSQLt also gives us convenience methods to check results in the <em>Assert</em> step.</p>
+<blockquote>
+<p>NOTE: tSQLt is <em>very</em> opinionated about how to write T-SQL code, and you may have to chose between testability and performance. Writing componentized T-SQL is not natural to most developers, as you will see in the examples.</p>
+</blockquote>
+<h4>Initial Setup</h4>
+<p>For these examples, we will be using the <a href="https://www.brentozar.com/archive/2015/10/how-to-download-the-stack-overflow-database-via-bittorrent/">StackOverflow2010 database</a>, provided by <a href="https://twitter.com/brento">Brent Ozar</a>.</p>
+<p>tSQLt leverages the CLR to do its magic, and you will need to run two scripts on the server to enable it (and add the various stored procedures and functions that make it tick). These scripts are included in the download from <a href="https://tsqlt.org/downloads">tSQLt</a> and you should execute <code>PrepareServer.sql</code> followed by <code>tSQLt.class.sql</code>. Be sure to be logged in with an admin user and make sure you are in the correct database.</p>
+<p>Once you have tSQLt installed, you will need to create a Test Class, a special schema that holds tests:</p>
+<pre><code class="hljs language-sql">USE StackOverflow;
+
+<span class="hljs-keyword">EXEC</span> tSQLt.NewTestClass <span class="hljs-string">'SampleTests'</span>;
+GO</code></pre>
+<h4>Inserting a User</h4>
+<p>Similar to our manual example, above, lets write a simple stored procedure to encapsulate the logic around inserting a user:</p>
+<pre><code class="hljs language-sql">USE StackOverflow;
+GO
+
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">PROCEDURE</span> dbo.InsertUser
+    <span class="hljs-variable">@aboutMe</span> NVARCHAR(MAX),
+    <span class="hljs-variable">@displayName</span> NVARCHAR(<span class="hljs-number">40</span>),
+    <span class="hljs-variable">@location</span> NVARCHAR(<span class="hljs-number">100</span>),
+    <span class="hljs-variable">@websiteUrl</span> NVARCHAR(<span class="hljs-number">200</span>)
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-keyword">SET</span> NOCOUNT <span class="hljs-keyword">ON</span>;
+
+    <span class="hljs-comment">-- Perform basic validation on required field</span>
+    IF (<span class="hljs-variable">@displayName</span> <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NULL</span>)
+        THROW <span class="hljs-number">50001</span>, <span class="hljs-string">'@displayName must not be null'</span>, <span class="hljs-number">1</span>;
+    
+    <span class="hljs-comment">-- Insert new row, capturing the new identity</span>
+    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> dbo.Users
+    (AboutMe, Age, CreationDate, DisplayName, DownVotes, EmailHash, LastAccessDate, [Location], Reputation, UpVotes, Views, WebsiteUrl, AccountId)
+    <span class="hljs-keyword">VALUES</span>
+    (<span class="hljs-variable">@aboutMe</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-variable">@displayName</span>, <span class="hljs-number">0</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-variable">@location</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-variable">@websiteUrl</span>, <span class="hljs-keyword">NULL</span>);
+
+    <span class="hljs-keyword">RETURN</span> SCOPE_IDENTITY();
+<span class="hljs-keyword">END</span>;
+GO</code></pre>
+<p>We have a few logical branches to test, namely, if we actually got a value for <code>@displayName</code> and if all the values are good.</p>
+<p>First, let's test the valid insert. To do so, we will create a stored procedure in our Test Class, containing the logic for the test:</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">PROCEDURE</span> SampleTests.[Test That Data Inserts Correctly <span class="hljs-keyword">to</span> Users <span class="hljs-keyword">Table</span>]
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-comment">-- Arrange</span>
+    <span class="hljs-keyword">EXEC</span> tSQLt.FakeTable <span class="hljs-variable">@TableName</span> <span class="hljs-operator">=</span> <span class="hljs-string">'dbo.Users'</span>, <span class="hljs-variable">@Identity</span> <span class="hljs-operator">=</span> <span class="hljs-number">1</span>;
+    <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@newUserId</span> <span class="hljs-type">INT</span>;
+
+    <span class="hljs-comment">-- Act</span>
+    <span class="hljs-keyword">EXEC</span> <span class="hljs-variable">@newUserId</span> <span class="hljs-operator">=</span> dbo.InsertUser <span class="hljs-string">'Test'</span>, <span class="hljs-string">'Test'</span>, <span class="hljs-string">'Test'</span>, <span class="hljs-string">'Test'</span>;
+
+    <span class="hljs-comment">-- Assert</span>
+    <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@countInTable</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> (<span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">COUNT</span>(<span class="hljs-number">1</span>) <span class="hljs-keyword">FROM</span> dbo.Users);
+    <span class="hljs-keyword">EXEC</span> tSQLt.AssertEquals <span class="hljs-number">1</span>, <span class="hljs-variable">@countInTable</span>, <span class="hljs-string">'Did not insert row'</span>;
+    <span class="hljs-keyword">EXEC</span> tSQLt.AssertEquals <span class="hljs-number">1</span>, <span class="hljs-variable">@newUserId</span>, <span class="hljs-string">'Did not insert new Id'</span>;
+<span class="hljs-keyword">END</span>;
+GO</code></pre>
+<p>What is this actually doing? Let's walk through step by step:</p>
+<ol>
+<li>We create a fake table, using <code>tSQLt.FakeTable</code>, which copies the <em>schema</em> of the table without the <em>constraints</em> of the table. In this case, we are supplying <code>@Identity = 1</code> to make sure our fake table also retains its identity specification. We could further supply <code>@Defaults = 1</code> to maintain default constraints, <code>@ComputedColumns = 1</code> to maintain computed columns or call <code>tSQLt.ApplyConstraint</code> to add other constraints, like foreign keys, back to our table. In our case, this is not necessary.</li>
+<li>We call our stored procedure with test values</li>
+<li>We check to see if our row was inserted correctly. In this case, we are only checking the existence of the row in the table and that it got <code>UserID</code> of <code>1</code> (which it should, since it's an empty table). In more complicated cases, we might want to check the actual data that was returned, using something like <code>tSQLt.AssertEqualsTable</code> or <code>tSQLt.AssertResultSetsHaveSameMetaData</code>.</li>
+</ol>
+<p>Now, to test the check on a <code>NULL</code> <code>@displayName</code> parameter, our unit test will look much simpler:</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">PROCEDURE</span> SampleTests.[Test That <span class="hljs-keyword">Null</span> Display Name <span class="hljs-keyword">On</span> <span class="hljs-keyword">Insert</span> <span class="hljs-keyword">User</span> Throws Error]
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-comment">-- Arrange</span>
+    <span class="hljs-keyword">EXEC</span> tSQLt.ExpectException 
+        <span class="hljs-variable">@ExpectedMessage</span> <span class="hljs-operator">=</span> <span class="hljs-string">'@displayName must not be null'</span>, 
+        <span class="hljs-variable">@ExpectedSeverity</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>, 
+        <span class="hljs-variable">@ExpectedState</span> <span class="hljs-operator">=</span> <span class="hljs-number">1</span>;
+
+    <span class="hljs-comment">-- Act</span>
+    <span class="hljs-keyword">EXEC</span> dbo.InsertUser <span class="hljs-string">'I''m a test'</span>, <span class="hljs-keyword">NULL</span>, <span class="hljs-string">'CI/CD'</span>, <span class="hljs-string">'https://www.contoso.com'</span>;
+<span class="hljs-keyword">END</span>;
+GO</code></pre>
+<p>In this case, we are just telling tSQLt that we expect an exception to be thrown by our code, and it handles the assertion for us, safely wrapping the call! Easy!</p>
+<h4>Adding a Componentized Function Call</h4>
+<p>One logic hole in our <code>dbo.InsertPerson</code> stored procedure is that we don't try to detect if the <code>@displayName</code> is in use, since those should be unique in the system. It would be quite easy to add a quick check in the stored procedure like this:</p>
+<pre><code class="hljs language-sql">IF <span class="hljs-keyword">EXISTS</span> (<span class="hljs-keyword">SELECT</span> <span class="hljs-number">1</span> <span class="hljs-keyword">FROM</span> dbo.Users <span class="hljs-keyword">WHERE</span> DisplayName <span class="hljs-operator">=</span> <span class="hljs-variable">@displayName</span>)
+    THROW <span class="hljs-number">50002</span>, <span class="hljs-string">'@displayName already exists'</span>, <span class="hljs-number">1</span>;</code></pre>
+<p>However, the testability of our stored procedure suffers, because now we have to think about adding data to our fake table (or not) to be able to test various scenarios. So we should encapsulate this logic into a function, especially because it can be reused in other parts of the system:</p>
+<pre><code class="hljs language-sql">USE StackOverflow;
+GO
+
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">FUNCTION</span> dbo.CheckUserDisplayNameExists(<span class="hljs-variable">@userDisplayName</span> NVARCHAR(<span class="hljs-number">40</span>))
+<span class="hljs-keyword">RETURNS</span> BIT
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@result</span> BIT;
+    IF <span class="hljs-keyword">EXISTS</span> (<span class="hljs-keyword">SELECT</span> <span class="hljs-number">1</span> <span class="hljs-keyword">FROM</span> dbo.Users <span class="hljs-keyword">WHERE</span> DisplayName <span class="hljs-operator">=</span> <span class="hljs-variable">@userDisplayName</span>)
+    <span class="hljs-keyword">BEGIN</span>
+        <span class="hljs-keyword">SET</span> <span class="hljs-variable">@result</span> <span class="hljs-operator">=</span> <span class="hljs-number">1</span>;
+    <span class="hljs-keyword">END</span>;
+    <span class="hljs-keyword">ELSE</span>
+    <span class="hljs-keyword">BEGIN</span>
+        <span class="hljs-keyword">SET</span> <span class="hljs-variable">@result</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">END</span>;
+    <span class="hljs-keyword">RETURN</span> (<span class="hljs-variable">@result</span>);
+<span class="hljs-keyword">END</span>;
+GO</code></pre>
+<p>And, of course, we write some unit tests for it:</p>
+<pre><code class="hljs language-sql">USE StackOverflow;
+GO
+
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">PROCEDURE</span> SampleTests.[Test That Existing <span class="hljs-keyword">User</span> Display Name <span class="hljs-keyword">Returns</span> <span class="hljs-number">1</span>]
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-comment">-- Arrange</span>
+    <span class="hljs-keyword">EXEC</span> tSQLt.FakeTable <span class="hljs-variable">@TableName</span> <span class="hljs-operator">=</span> <span class="hljs-string">'dbo.Users'</span>, <span class="hljs-variable">@Identity</span> <span class="hljs-operator">=</span> <span class="hljs-number">1</span>;
+    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> dbo.Users
+    (AboutMe, Age, CreationDate, DisplayName, DownVotes, EmailHash, LastAccessDate, [Location], Reputation, UpVotes, Views, WebsiteUrl, AccountId)
+    <span class="hljs-keyword">VALUES</span>
+    (<span class="hljs-string">'I''m a test'</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-string">'test-display-name'</span>, <span class="hljs-number">0</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-string">'CI/CD'</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-string">'https://www.contoso.com'</span>, <span class="hljs-keyword">NULL</span>);
+    <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@result</span> <span class="hljs-type">INT</span>;
+
+    <span class="hljs-comment">-- Act</span>
+    <span class="hljs-keyword">SET</span> <span class="hljs-variable">@result</span> <span class="hljs-operator">=</span> (<span class="hljs-keyword">SELECT</span> dbo.CheckUserDisplayNameExists(<span class="hljs-string">'test-display-name'</span>));
+
+    <span class="hljs-comment">-- Assert</span>
+    <span class="hljs-keyword">EXEC</span> tSQLt.AssertEquals <span class="hljs-number">1</span>, <span class="hljs-variable">@result</span>, <span class="hljs-string">'Did not return that User Display Name Exists'</span>;
+<span class="hljs-keyword">END</span>;
+GO</code></pre>
+<pre><code class="hljs language-sql">USE StackOverflow;
+GO
+
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">PROCEDURE</span> SampleTests.[Test That Non<span class="hljs-operator">-</span>existing <span class="hljs-keyword">User</span> Display Name <span class="hljs-keyword">Returns</span> <span class="hljs-number">0</span>]
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-comment">-- Arrange</span>
+    <span class="hljs-keyword">EXEC</span> tSQLt.FakeTable <span class="hljs-variable">@TableName</span> <span class="hljs-operator">=</span> <span class="hljs-string">'dbo.Users'</span>, <span class="hljs-variable">@Identity</span> <span class="hljs-operator">=</span> <span class="hljs-number">1</span>;
+    <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@result</span> <span class="hljs-type">INT</span>;
+
+    <span class="hljs-comment">-- Act</span>
+    <span class="hljs-keyword">SET</span> <span class="hljs-variable">@result</span> <span class="hljs-operator">=</span> (<span class="hljs-keyword">SELECT</span> dbo.CheckUserDisplayNameExists(<span class="hljs-string">'test-display-name'</span>));
+
+    <span class="hljs-comment">-- Assert</span>
+    <span class="hljs-keyword">EXEC</span> tSQLt.AssertEquals <span class="hljs-number">0</span>, <span class="hljs-variable">@result</span>, <span class="hljs-string">'Did not return that User Display Name Does Not Exist'</span>;
+<span class="hljs-keyword">END</span>;
+GO</code></pre>
+<p>Now we can change our stored procedure to look like this:</p>
+<pre><code class="hljs language-sql">USE StackOverflow;
+GO
+
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">PROCEDURE</span> dbo.InsertUser
+    <span class="hljs-variable">@aboutMe</span> NVARCHAR(MAX),
+    <span class="hljs-variable">@displayName</span> NVARCHAR(<span class="hljs-number">40</span>),
+    <span class="hljs-variable">@location</span> NVARCHAR(<span class="hljs-number">100</span>),
+    <span class="hljs-variable">@websiteUrl</span> NVARCHAR(<span class="hljs-number">200</span>)
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-keyword">SET</span> NOCOUNT <span class="hljs-keyword">ON</span>;
+
+    <span class="hljs-comment">-- Perform basic validation on required field</span>
+    IF (<span class="hljs-variable">@displayName</span> <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NULL</span>)
+        THROW <span class="hljs-number">50001</span>, <span class="hljs-string">'@displayName must not be null'</span>, <span class="hljs-number">1</span>;
+
+    <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@displayNameExists</span> BIT;
+    <span class="hljs-keyword">SET</span> <span class="hljs-variable">@displayNameExists</span> <span class="hljs-operator">=</span> (<span class="hljs-keyword">SELECT</span> dbo.CheckUserDisplayNameExists(<span class="hljs-variable">@displayName</span>));
+    IF (<span class="hljs-variable">@displayNameExists</span> <span class="hljs-operator">=</span> <span class="hljs-number">1</span>)
+        THROW <span class="hljs-number">50002</span>, <span class="hljs-string">'@displayName already exists'</span>, <span class="hljs-number">1</span>;
+    
+    <span class="hljs-comment">-- Insert new row, capturing the new identity</span>
+    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> dbo.Users
+    (AboutMe, Age, CreationDate, DisplayName, DownVotes, EmailHash, LastAccessDate, [Location], Reputation, UpVotes, Views, WebsiteUrl, AccountId)
+    <span class="hljs-keyword">VALUES</span>
+    (<span class="hljs-variable">@aboutMe</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-variable">@displayName</span>, <span class="hljs-number">0</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-variable">@location</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-variable">@websiteUrl</span>, <span class="hljs-keyword">NULL</span>);
+
+    <span class="hljs-keyword">RETURN</span> SCOPE_IDENTITY();
+<span class="hljs-keyword">END</span>;
+GO</code></pre>
+<p>Is there more code now? Yes, but we can fully isolate the function call. We do this by creating fake implementations which we can use with <code>tSQLt.FakeFunction</code> to have called instead of our real function during the test run. So we will create two fake implementations, one for each case:</p>
+<pre><code class="hljs language-sql">USE StackOverflow;
+GO
+
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">FUNCTION</span> SampleTests.Fake_CheckUserDisplayNameExists_DoesExist (<span class="hljs-variable">@userDisplayName</span> NVARCHAR(<span class="hljs-number">40</span>))
+<span class="hljs-keyword">RETURNS</span> BIT
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-keyword">RETURN</span> <span class="hljs-number">1</span>;
+<span class="hljs-keyword">END</span>;</code></pre>
+<pre><code class="hljs language-sql">USE StackOverflow;
+GO
+
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">FUNCTION</span> SampleTests.Fake_CheckUserDisplayNameExists_DoesNotExist (<span class="hljs-variable">@userDisplayName</span> NVARCHAR(<span class="hljs-number">40</span>))
+<span class="hljs-keyword">RETURNS</span> BIT
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-keyword">RETURN</span> <span class="hljs-number">0</span>;
+<span class="hljs-keyword">END</span>;</code></pre>
+<blockquote>
+<p>NOTE: It is <em>vitally important</em> for the parameter names to match <em>exactly</em>, otherwise tSQLt will not be able to do the replacement properly (and it will not give you great feedback on why).</p>
+</blockquote>
+<p>We can now create a unit test using our fake function, rather than creating data in a table - much more reliable and less prone to human error!</p>
+<pre><code class="hljs language-sql">USE StackOverflow;
+GO
+
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">PROCEDURE</span> SampleTests.[Test That Already Existing Display Name <span class="hljs-keyword">On</span> <span class="hljs-keyword">Insert</span> <span class="hljs-keyword">User</span> Throws Error]
+<span class="hljs-keyword">AS</span>
+<span class="hljs-keyword">BEGIN</span>
+    <span class="hljs-comment">-- Arrange</span>
+    <span class="hljs-keyword">EXEC</span> tSQLt.FakeFunction <span class="hljs-string">'dbo.CheckUserDisplayNameExists'</span>, <span class="hljs-string">'SampleTests.Fake_CheckUserDisplayNameExists_DoesExist'</span>;
+    <span class="hljs-keyword">EXEC</span> tSQLt.ExpectException 
+        <span class="hljs-variable">@ExpectedMessage</span> <span class="hljs-operator">=</span> <span class="hljs-string">'@displayName already exists'</span>, 
+        <span class="hljs-variable">@ExpectedSeverity</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>, 
+        <span class="hljs-variable">@ExpectedState</span> <span class="hljs-operator">=</span> <span class="hljs-number">1</span>;
+
+    <span class="hljs-comment">-- Act</span>
+    <span class="hljs-keyword">EXEC</span> dbo.InsertUser <span class="hljs-string">'I''m a test'</span>, <span class="hljs-string">'existing-display-name'</span>, <span class="hljs-string">'CI/CD'</span>, <span class="hljs-string">'https://www.contoso.com'</span>;
+<span class="hljs-keyword">END</span>;
+GO</code></pre>
+<h4>Running tSQLt Tests</h4>
+<p>For our manual tests, we threw together a bit of Powershell to help us out. Fortunately, with tSQLt, we can stay right in T-SQL. We can execute a single test like so:</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> tSQLt.Run <span class="hljs-variable">@testName</span> <span class="hljs-operator">=</span> <span class="hljs-string">'SampleTests.[Test That Already Existing Display Name On Insert User Throws Error]'</span>;</code></pre>
+<p>We can run an entire Test Class like so:</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> tSQLt.Run <span class="hljs-variable">@testName</span> <span class="hljs-operator">=</span> <span class="hljs-string">'SampleTests'</span>;</code></pre>
+<p>And, finally, we can run all tests in all Test Classes like so:</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> tSQLt.RunAll;</code></pre>
+<h3>Conclusion</h3>
+<p>We should be unit testing our database code, and we while we can write and execute those tests manually, there exists a better way - tSQLt. Unit testing does require us to write our database code in different ways, but this also makes it more reusable and more resistent to changes that could break things.</p>
+<p>In a future blog post, I will outline how to integrate database unit testing to your CI/CD pipeline, so you can run tests every time the code changes, and not just when developers remember to.</p>
+]]></content:encoded>
+        </item>
+    
         <item>
             <guid>https://www.danielmallott.com/posts/tag-your-queries-in-entity-framework-core</guid>
             <title>Using Entity Framework Core? Tag Your Queries!</title>
