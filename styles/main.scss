@@ -23,4 +23,31 @@ $card-color: rgb(51, 51, 51);
 
 .hljs {
   width: 100%;
+  background-color: #fff;
+  border: 1px solid #777;
+}
+
+.callout {
+  background-color: #fff;
+  border: 1px solid #777;
+  border-left-width: 0.25rem;
+  border-radius: 0.25rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.callout > p {
+  margin-bottom: 0;
+}
+
+.callout-info {
+  border-left-color: $info;
+}
+
+.callout-warning {
+  border-left-color: $warning;
+}
+
+.callout-danger {
+  border-left-color: $danger;
 }
