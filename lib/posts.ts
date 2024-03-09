@@ -1,11 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import { remark } from 'remark';
-import html from 'remark-html';
 import { SortedPost } from '../models/sorted-post';
 import { PostData } from '../models/post-data';
-import highlight from 'remark-highlight.js';
+import { unified } from 'unified';
+import remarkRehype from 'remark-rehype';
+import rehypeHighlight from 'rehype-highlight';
+import remarkParse from 'remark-parse';
+import rehypeStringify from 'rehype-stringify';
+import remarkGfm from 'remark-gfm';
+import remarkDirective from 'remark-directive';
+import remarkNotePlugin from './remark-note-plugin';
 
 const postsDirectory: string = path.join(process.cwd(), 'posts');
 
@@ -19,7 +24,7 @@ export function getSortedPostsData (): SortedPost[] {
     const matterResult: matter.GrayMatterFile<string> = matter(fileContents);
 
     return {
-      id: id,
+      id,
       title: matterResult.data.title,
       date: matterResult.data.date,
       summary: matterResult.data.summary,
@@ -63,14 +68,19 @@ export async function getPostData (id: string): Promise<PostData> {
 
   const matterResult = matter(fileContents);
 
-  const processedContent = await remark()
-    .use(highlight)
-    .use(html, { sanitize: false })
+  const processedContent = await unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkDirective)
+    .use(remarkNotePlugin)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeHighlight)
+    .use(rehypeStringify, { allowDangerousHtml: true })
     .process(matterResult.content);
   const contentHtml = processedContent.toString();
 
   return {
-    id: id,
+    id,
     htmlContent: contentHtml,
     title: matterResult.data.title,
     date: matterResult.data.date,

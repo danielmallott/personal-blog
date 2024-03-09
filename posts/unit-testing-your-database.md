@@ -54,13 +54,17 @@ public void Test_GetMessage()
 
 In the arrange step, we set up everything needed to successfully execute the test. This includes setting up preconditions, such as functions or procedures that need to run beforehand, creating testing data, and mocking any dependencies. Why do we mock dependencies? Remember, we want to _isolate_ our tests to only the code under test, so any dependencies should return _expected_ data or status codes.
 
-> NOTE: The Arrange step is not necessary if you can simply invoke the code under test with no setup, hence it being optional.
+:::note{.callout .callout-info}
+The Arrange step is not necessary if you can simply invoke the code under test with no setup, hence it being optional.
+:::
 
 #### Act
 
 In the Act step, we actually invoke the code under test, using the data from the Arrange step, if needed. Just as importantly, we will record the results, as we will need to review them later in the Assert step.
 
-> NOTE: In certain circumstances, such as testing for an error being thrown, we may not need to record the results, if our testing framework takes care of that for us.
+:::note{.callout .callout-info}
+In certain circumstances, such as testing for an error being thrown, we may not need to record the results, if our testing framework takes care of that for us.
+:::
 
 #### Assert
 
@@ -142,7 +146,9 @@ Enter [tSQLt](https://tsqlt.org/)! tSQLt is an open source database unit testing
 
 How does it do this? tSQLt introduces a mocking framework, allowing us to replace functions, stored procedures, and tables with "fake" versions, so we can control the output or isolate our database from changes made during the test run. tSQLt also gives us convenience methods to check results in the _Assert_ step.
 
-> NOTE: tSQLt is _very_ opinionated about how to write T-SQL code, and you may have to chose between testability and performance. Writing componentized T-SQL is not natural to most developers, as you will see in the examples.
+:::note{.callout .callout-warning}
+tSQLt is _very_ opinionated about how to write T-SQL code, and you may have to chose between testability and performance. Writing componentized T-SQL is not natural to most developers, as you will see in the examples.
+:::
 
 #### Initial Setup
 
@@ -379,7 +385,9 @@ BEGIN
 END;
 ```
 
-> NOTE: It is _vitally important_ for the parameter names to match _exactly_, otherwise tSQLt will not be able to do the replacement properly (and it will not give you great feedback on why).
+:::note{.callout .callout-danger}
+It is _vitally important_ for the parameter names to match _exactly_, otherwise tSQLt will not be able to do the replacement properly (and it will not give you great feedback on why).
+:::
 
 We can now create a unit test using our fake function, rather than creating data in a table - much more reliable and less prone to human error!
 

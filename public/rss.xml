@@ -49,17 +49,14 @@
 
     <span class="hljs-comment">// Assert</span>
     Assert.Equal(expected, result);
-}</code></pre>
+}
+</code></pre>
 <h4>Arrange</h4>
 <p>In the arrange step, we set up everything needed to successfully execute the test. This includes setting up preconditions, such as functions or procedures that need to run beforehand, creating testing data, and mocking any dependencies. Why do we mock dependencies? Remember, we want to <em>isolate</em> our tests to only the code under test, so any dependencies should return <em>expected</em> data or status codes.</p>
-<blockquote>
-<p>NOTE: The Arrange step is not necessary if you can simply invoke the code under test with no setup, hence it being optional.</p>
-</blockquote>
+<div class="callout callout-info"><p>The Arrange step is not necessary if you can simply invoke the code under test with no setup, hence it being optional.</p></div>
 <h4>Act</h4>
 <p>In the Act step, we actually invoke the code under test, using the data from the Arrange step, if needed. Just as importantly, we will record the results, as we will need to review them later in the Assert step.</p>
-<blockquote>
-<p>NOTE: In certain circumstances, such as testing for an error being thrown, we may not need to record the results, if our testing framework takes care of that for us.</p>
-</blockquote>
+<div class="callout callout-info"><p>In certain circumstances, such as testing for an error being thrown, we may not need to record the results, if our testing framework takes care of that for us.</p></div>
 <h4>Assert</h4>
 <p>In the Assert step, we check to see if the results of the function or procedure match what we expected. If they do, the test passes; if not, it fails.</p>
 <h3>Manual Unit Tests in T-SQL</h3>
@@ -94,28 +91,30 @@ GO
     <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@result</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> (<span class="hljs-keyword">SELECT</span> TOP (<span class="hljs-number">1</span>) InsertedID <span class="hljs-keyword">FROM</span> <span class="hljs-variable">@InsertedId</span>);
     <span class="hljs-keyword">RETURN</span> <span class="hljs-variable">@result</span>;
 <span class="hljs-keyword">END</span>;
-GO</code></pre>
+GO
+</code></pre>
 <p>Now, while this is a simple stored procedure, we will want to test it, to make sure the error is thrown and to make sure data is inserted successfully.</p>
 <p>To test if the error is thrown, we might write something like:</p>
-<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> dbo.InsertPerson <span class="hljs-keyword">NULL</span>, <span class="hljs-keyword">NULL</span>, <span class="hljs-keyword">NULL</span>, <span class="hljs-keyword">NULL</span>;</code></pre>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> dbo.InsertPerson <span class="hljs-keyword">NULL</span>, <span class="hljs-keyword">NULL</span>, <span class="hljs-keyword">NULL</span>, <span class="hljs-keyword">NULL</span>;
+</code></pre>
 <p>And when we execute it, we will observe the error thrown in the Results pane in SSMS or Azure Data Studio.</p>
 <p>Similarly, for testing if the stored procedure works with valid values, we can write something like:</p>
 <pre><code class="hljs language-sql"><span class="hljs-keyword">BEGIN</span> TRANSACTION;
 <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@newPersonId</span> <span class="hljs-type">INT</span>;
 <span class="hljs-keyword">EXEC</span> <span class="hljs-variable">@newPersonId</span> <span class="hljs-operator">=</span> dbo.InsertPerson <span class="hljs-string">'Test'</span>, <span class="hljs-string">'TestUser'</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>;
 <span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> Application.People <span class="hljs-keyword">WHERE</span> PersonID <span class="hljs-operator">=</span> <span class="hljs-variable">@newPersonId</span>;
-<span class="hljs-keyword">ROLLBACK</span>;</code></pre>
+<span class="hljs-keyword">ROLLBACK</span>;
+</code></pre>
 <p>This is fairly cumbersome, and not particularly automatable, although you can group all your scripts in a single folder and write some Powershell (or other scripting language) like this to run all the scripts:</p>
-<pre><code class="hljs language-powershell"><span class="hljs-built_in">Get-ChildItem</span> <span class="hljs-literal">-Path</span> ./src/Tests/WideWorldImporters <span class="hljs-literal">-Force</span> | <span class="hljs-built_in">ForEach-Object</span> <span class="hljs-literal">-Process</span> {
-    <span class="hljs-built_in">Invoke-Sqlcmd</span> <span class="hljs-literal">-InputFile</span> <span class="hljs-variable">$_</span>.FullName <span class="hljs-literal">-ConnectionString</span> <span class="hljs-string">"Data Source=localhost;Initial Catalog=WideWorldImporters;User Id=&#x3C;user id here>;Password=&#x3C;password here>;TrustServerCertificate=true"</span>
-}</code></pre>
+<pre><code class="hljs language-powershell">Get-ChildItem -Path ./src/Tests/WideWorldImporters -Force | ForEach-Object -Process {
+    Invoke-Sqlcmd -InputFile $_.FullName -ConnectionString "Data Source=localhost;Initial Catalog=WideWorldImporters;User Id=&#x3C;user id here>;Password=&#x3C;password here>;TrustServerCertificate=true"
+}
+</code></pre>
 <h3>Automating Unit Tests With tSQLt</h3>
 <p>Writing unit tests manually and managing database state is not bad for small applications or when there are few developers; however, if you scale your team(s) or start writing lots of stored procedures and functions, writing manual tests starts to become a major challenge.</p>
 <p>Enter <a href="https://tsqlt.org/">tSQLt</a>! tSQLt is an open source database unit testing framework specifically written for SQL Server. tSQLt gives us tools to help automate the <em>Arrange</em> and <em>Assert</em> steps, so we do not have to manually manage transactions or write complicated select statements to make sure two tabular results match.</p>
 <p>How does it do this? tSQLt introduces a mocking framework, allowing us to replace functions, stored procedures, and tables with "fake" versions, so we can control the output or isolate our database from changes made during the test run. tSQLt also gives us convenience methods to check results in the <em>Assert</em> step.</p>
-<blockquote>
-<p>NOTE: tSQLt is <em>very</em> opinionated about how to write T-SQL code, and you may have to chose between testability and performance. Writing componentized T-SQL is not natural to most developers, as you will see in the examples.</p>
-</blockquote>
+<div class="callout callout-warning"><p>tSQLt is <em>very</em> opinionated about how to write T-SQL code, and you may have to chose between testability and performance. Writing componentized T-SQL is not natural to most developers, as you will see in the examples.</p></div>
 <h4>Initial Setup</h4>
 <p>For these examples, we will be using the <a href="https://www.brentozar.com/archive/2015/10/how-to-download-the-stack-overflow-database-via-bittorrent/">StackOverflow2010 database</a>, provided by <a href="https://twitter.com/brento">Brent Ozar</a>.</p>
 <p>tSQLt leverages the CLR to do its magic, and you will need to run two scripts on the server to enable it (and add the various stored procedures and functions that make it tick). These scripts are included in the download from <a href="https://tsqlt.org/downloads">tSQLt</a> and you should execute <code>PrepareServer.sql</code> followed by <code>tSQLt.class.sql</code>. Be sure to be logged in with an admin user and make sure you are in the correct database.</p>
@@ -123,7 +122,8 @@ GO</code></pre>
 <pre><code class="hljs language-sql">USE StackOverflow;
 
 <span class="hljs-keyword">EXEC</span> tSQLt.NewTestClass <span class="hljs-string">'SampleTests'</span>;
-GO</code></pre>
+GO
+</code></pre>
 <h4>Inserting a User</h4>
 <p>Similar to our manual example, above, lets write a simple stored procedure to encapsulate the logic around inserting a user:</p>
 <pre><code class="hljs language-sql">USE StackOverflow;
@@ -150,7 +150,8 @@ GO
 
     <span class="hljs-keyword">RETURN</span> SCOPE_IDENTITY();
 <span class="hljs-keyword">END</span>;
-GO</code></pre>
+GO
+</code></pre>
 <p>We have a few logical branches to test, namely, if we actually got a value for <code>@displayName</code> and if all the values are good.</p>
 <p>First, let's test the valid insert. To do so, we will create a stored procedure in our Test Class, containing the logic for the test:</p>
 <pre><code class="hljs language-sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">PROCEDURE</span> SampleTests.[Test That Data Inserts Correctly <span class="hljs-keyword">to</span> Users <span class="hljs-keyword">Table</span>]
@@ -168,7 +169,8 @@ GO</code></pre>
     <span class="hljs-keyword">EXEC</span> tSQLt.AssertEquals <span class="hljs-number">1</span>, <span class="hljs-variable">@countInTable</span>, <span class="hljs-string">'Did not insert row'</span>;
     <span class="hljs-keyword">EXEC</span> tSQLt.AssertEquals <span class="hljs-number">1</span>, <span class="hljs-variable">@newUserId</span>, <span class="hljs-string">'Did not insert new Id'</span>;
 <span class="hljs-keyword">END</span>;
-GO</code></pre>
+GO
+</code></pre>
 <p>What is this actually doing? Let's walk through step by step:</p>
 <ol>
 <li>We create a fake table, using <code>tSQLt.FakeTable</code>, which copies the <em>schema</em> of the table without the <em>constraints</em> of the table. In this case, we are supplying <code>@Identity = 1</code> to make sure our fake table also retains its identity specification. We could further supply <code>@Defaults = 1</code> to maintain default constraints, <code>@ComputedColumns = 1</code> to maintain computed columns or call <code>tSQLt.ApplyConstraint</code> to add other constraints, like foreign keys, back to our table. In our case, this is not necessary.</li>
@@ -188,12 +190,14 @@ GO</code></pre>
     <span class="hljs-comment">-- Act</span>
     <span class="hljs-keyword">EXEC</span> dbo.InsertUser <span class="hljs-string">'I''m a test'</span>, <span class="hljs-keyword">NULL</span>, <span class="hljs-string">'CI/CD'</span>, <span class="hljs-string">'https://www.contoso.com'</span>;
 <span class="hljs-keyword">END</span>;
-GO</code></pre>
+GO
+</code></pre>
 <p>In this case, we are just telling tSQLt that we expect an exception to be thrown by our code, and it handles the assertion for us, safely wrapping the call! Easy!</p>
 <h4>Adding a Componentized Function Call</h4>
 <p>One logic hole in our <code>dbo.InsertPerson</code> stored procedure is that we don't try to detect if the <code>@displayName</code> is in use, since those should be unique in the system. It would be quite easy to add a quick check in the stored procedure like this:</p>
 <pre><code class="hljs language-sql">IF <span class="hljs-keyword">EXISTS</span> (<span class="hljs-keyword">SELECT</span> <span class="hljs-number">1</span> <span class="hljs-keyword">FROM</span> dbo.Users <span class="hljs-keyword">WHERE</span> DisplayName <span class="hljs-operator">=</span> <span class="hljs-variable">@displayName</span>)
-    THROW <span class="hljs-number">50002</span>, <span class="hljs-string">'@displayName already exists'</span>, <span class="hljs-number">1</span>;</code></pre>
+    THROW <span class="hljs-number">50002</span>, <span class="hljs-string">'@displayName already exists'</span>, <span class="hljs-number">1</span>;
+</code></pre>
 <p>However, the testability of our stored procedure suffers, because now we have to think about adding data to our fake table (or not) to be able to test various scenarios. So we should encapsulate this logic into a function, especially because it can be reused in other parts of the system:</p>
 <pre><code class="hljs language-sql">USE StackOverflow;
 GO
@@ -213,7 +217,8 @@ GO
     <span class="hljs-keyword">END</span>;
     <span class="hljs-keyword">RETURN</span> (<span class="hljs-variable">@result</span>);
 <span class="hljs-keyword">END</span>;
-GO</code></pre>
+GO
+</code></pre>
 <p>And, of course, we write some unit tests for it:</p>
 <pre><code class="hljs language-sql">USE StackOverflow;
 GO
@@ -235,7 +240,8 @@ GO
     <span class="hljs-comment">-- Assert</span>
     <span class="hljs-keyword">EXEC</span> tSQLt.AssertEquals <span class="hljs-number">1</span>, <span class="hljs-variable">@result</span>, <span class="hljs-string">'Did not return that User Display Name Exists'</span>;
 <span class="hljs-keyword">END</span>;
-GO</code></pre>
+GO
+</code></pre>
 <pre><code class="hljs language-sql">USE StackOverflow;
 GO
 
@@ -252,7 +258,8 @@ GO
     <span class="hljs-comment">-- Assert</span>
     <span class="hljs-keyword">EXEC</span> tSQLt.AssertEquals <span class="hljs-number">0</span>, <span class="hljs-variable">@result</span>, <span class="hljs-string">'Did not return that User Display Name Does Not Exist'</span>;
 <span class="hljs-keyword">END</span>;
-GO</code></pre>
+GO
+</code></pre>
 <p>Now we can change our stored procedure to look like this:</p>
 <pre><code class="hljs language-sql">USE StackOverflow;
 GO
@@ -283,7 +290,8 @@ GO
 
     <span class="hljs-keyword">RETURN</span> SCOPE_IDENTITY();
 <span class="hljs-keyword">END</span>;
-GO</code></pre>
+GO
+</code></pre>
 <p>Is there more code now? Yes, but we can fully isolate the function call. We do this by creating fake implementations which we can use with <code>tSQLt.FakeFunction</code> to have called instead of our real function during the test run. So we will create two fake implementations, one for each case:</p>
 <pre><code class="hljs language-sql">USE StackOverflow;
 GO
@@ -293,7 +301,8 @@ GO
 <span class="hljs-keyword">AS</span>
 <span class="hljs-keyword">BEGIN</span>
     <span class="hljs-keyword">RETURN</span> <span class="hljs-number">1</span>;
-<span class="hljs-keyword">END</span>;</code></pre>
+<span class="hljs-keyword">END</span>;
+</code></pre>
 <pre><code class="hljs language-sql">USE StackOverflow;
 GO
 
@@ -302,10 +311,9 @@ GO
 <span class="hljs-keyword">AS</span>
 <span class="hljs-keyword">BEGIN</span>
     <span class="hljs-keyword">RETURN</span> <span class="hljs-number">0</span>;
-<span class="hljs-keyword">END</span>;</code></pre>
-<blockquote>
-<p>NOTE: It is <em>vitally important</em> for the parameter names to match <em>exactly</em>, otherwise tSQLt will not be able to do the replacement properly (and it will not give you great feedback on why).</p>
-</blockquote>
+<span class="hljs-keyword">END</span>;
+</code></pre>
+<div class="callout callout-danger"><p>It is <em>vitally important</em> for the parameter names to match <em>exactly</em>, otherwise tSQLt will not be able to do the replacement properly (and it will not give you great feedback on why).</p></div>
 <p>We can now create a unit test using our fake function, rather than creating data in a table - much more reliable and less prone to human error!</p>
 <pre><code class="hljs language-sql">USE StackOverflow;
 GO
@@ -323,18 +331,21 @@ GO
     <span class="hljs-comment">-- Act</span>
     <span class="hljs-keyword">EXEC</span> dbo.InsertUser <span class="hljs-string">'I''m a test'</span>, <span class="hljs-string">'existing-display-name'</span>, <span class="hljs-string">'CI/CD'</span>, <span class="hljs-string">'https://www.contoso.com'</span>;
 <span class="hljs-keyword">END</span>;
-GO</code></pre>
+GO
+</code></pre>
 <h4>Running tSQLt Tests</h4>
 <p>For our manual tests, we threw together a bit of Powershell to help us out. Fortunately, with tSQLt, we can stay right in T-SQL. We can execute a single test like so:</p>
-<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> tSQLt.Run <span class="hljs-variable">@testName</span> <span class="hljs-operator">=</span> <span class="hljs-string">'SampleTests.[Test That Already Existing Display Name On Insert User Throws Error]'</span>;</code></pre>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> tSQLt.Run <span class="hljs-variable">@testName</span> <span class="hljs-operator">=</span> <span class="hljs-string">'SampleTests.[Test That Already Existing Display Name On Insert User Throws Error]'</span>;
+</code></pre>
 <p>We can run an entire Test Class like so:</p>
-<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> tSQLt.Run <span class="hljs-variable">@testName</span> <span class="hljs-operator">=</span> <span class="hljs-string">'SampleTests'</span>;</code></pre>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> tSQLt.Run <span class="hljs-variable">@testName</span> <span class="hljs-operator">=</span> <span class="hljs-string">'SampleTests'</span>;
+</code></pre>
 <p>And, finally, we can run all tests in all Test Classes like so:</p>
-<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> tSQLt.RunAll;</code></pre>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> tSQLt.RunAll;
+</code></pre>
 <h3>Conclusion</h3>
 <p>We should be unit testing our database code, and we while we can write and execute those tests manually, there exists a better way - tSQLt. Unit testing does require us to write our database code in different ways, but this also makes it more reusable and more resistent to changes that could break things.</p>
-<p>In a future blog post, I will outline how to integrate database unit testing to your CI/CD pipeline, so you can run tests every time the code changes, and not just when developers remember to.</p>
-]]></content:encoded>
+<p>In a future blog post, I will outline how to integrate database unit testing to your CI/CD pipeline, so you can run tests every time the code changes, and not just when developers remember to.</p>]]></content:encoded>
         </item>
     
         <item>
@@ -346,29 +357,30 @@ GO</code></pre>
             <content:encoded><![CDATA[<h2>Query Tagging</h2>
 <p><a href="https://docs.microsoft.com/en-us/ef/core/">Entity Framework Core</a> is an incredibly flexible tool that can abstract a significant part of our database access away. However, we still need to be concerned with performance tuning and tracing. Oftentimes, the DBA team will come to the Development team asking about a specific query, usually when it's performing poorly, or the Development team might ask the DBA team about improving the performance of a specific query. Wouldn't it be great to have a way to easily track down the queries that are coming from your application?</p>
 <h3>Enter <code>.TagWith()</code></h3>
-<p>Starting with EF Core 2.2, you can add <code>[.TagWith()](https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.tagwith?view=efcore-6.0)</code> to your LINQ statement, like so:</p>
+<p>Starting with EF Core 2.2, you can add <a href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.tagwith?view=efcore-6.0"><code>.TagWith()</code></a> to your LINQ statement, like so:</p>
 <pre><code class="hljs language-c#"><span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> <span class="hljs-keyword">this</span>._dbContext
     .Minifigs
     .TagWith(<span class="hljs-keyword">nameof</span>(GetAll))
     .Select(m => <span class="hljs-keyword">new</span> Minifig(m.MinifigNumber, m.MinifigName, m.NumberOfParts))
-    .ToListAsync();</code></pre>
+    .ToListAsync();
+</code></pre>
 <p>In this case, the name of the method will get added to the query in the form of a comment at the top:</p>
 <img class="blog-image" src="/images/inline-blog/entity-framework-core-tag-with.png" alt="Entity Framework Core .TagWith() Generated SQL" />
 <p>You can add what ever <code>string</code> you like as an argument for <code>.TagWith()</code>, and you can even add multiple calls to <code>.TagWith()</code> to include additional data, which can be very useful in conditional query scenarios. Now, you can easily search in your logs and in your database's specific query store for those queries!</p>
 <h3>What About <code>.TagWithCallSite()</code>?</h3>
-<p>If you are using EF Core 6.x, there is an additional extension method that provides some great information. By adding <code>[.TagWithCallSite()](https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.tagwithcallsite?view=efcore-6.0)</code>, the query will get tagged with the source file name and line where the method was called from:</p>
+<p>If you are using EF Core 6.x, there is an additional extension method that provides some great information. By adding <a href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.tagwithcallsite?view=efcore-6.0"><code>.TagWithCallSite()</code></a>, the query will get tagged with the source file name and line where the method was called from:</p>
 <pre><code class="hljs language-c#"><span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> <span class="hljs-keyword">this</span>._dbContext
     .Minifigs
     .TagWith(<span class="hljs-keyword">nameof</span>(GetAll))
     .TagWithCallSite()
     .Select(m => <span class="hljs-keyword">new</span> Minifig(m.MinifigNumber, m.MinifigName, m.NumberOfParts))
-    .ToListAsync();</code></pre>
+    .ToListAsync();
+</code></pre>
 <p>Which produces:</p>
 <img class="blog-image" src="/images/inline-blog/entity-framework-core-tag-with-call-site.png" alt="Entity Framework Core .TagWithCallSite() Generated SQL" />
 <p>This is fantastic! Now I know exactly where in my code the query is being generated from, which is very useful in debugging and tracing scenarios.</p>
 <h3>Conclusion</h3>
-<p>If you're using Entity Framework Core 2.2 or greater, tag your queries with <code>.TagWith()</code>. If you're using EF Core 6.0 or greater, add <code>.TagWithCallSite()</code>. Future you (and your team and the DBA team) will thank you!</p>
-]]></content:encoded>
+<p>If you're using Entity Framework Core 2.2 or greater, tag your queries with <code>.TagWith()</code>. If you're using EF Core 6.0 or greater, add <code>.TagWithCallSite()</code>. Future you (and your team and the DBA team) will thank you!</p>]]></content:encoded>
         </item>
     
         <item>
@@ -383,8 +395,7 @@ GO</code></pre>
 <h3>In-person Events in the Time of COVID</h3>
 <p>Probably the most daunting part of conferences in the time of COVID is how to ensure participants are as safe as they can be while sharing indoor rooms with people from around the US/world (aka how to spread an airborne pathogen 101). The organizers for KCDC did a fantastic job. Kansas City also has a mask mandate currently, which helped. The organizers had masks, hand sanitizer, and sanitizing wipes all available throughout the conference. In addition, the Kansas City Convention Center, where the conference was held, had sanitizer and kept things pretty clean. The attendees did their part, too - everyone kept excellent mask discipline (that I saw), with the exception of people who found out of the way corners to take video calls, or the like.</p>
 <h3>What's Next?</h3>
-<p>I had a fantastic time speaking and attending KCDC, and it's helped me be more hopeful for the end of the pandemic and pandemic related restrictions. We are not out of the woods (far from it), but I think the end is in sight. And, this was a great trial run for my bigger travels coming up. I am looking forward to arriving in Prague for <a href="https://www.updateconference.net/">Update Conference 2021</a>, meeting new people, and seeing old friends.</p>
-]]></content:encoded>
+<p>I had a fantastic time speaking and attending KCDC, and it's helped me be more hopeful for the end of the pandemic and pandemic related restrictions. We are not out of the woods (far from it), but I think the end is in sight. And, this was a great trial run for my bigger travels coming up. I am looking forward to arriving in Prague for <a href="https://www.updateconference.net/">Update Conference 2021</a>, meeting new people, and seeing old friends.</p>]]></content:encoded>
         </item>
     
         <item>
@@ -396,8 +407,7 @@ GO</code></pre>
             <content:encoded><![CDATA[<h2>It's been a year (plus)...</h2>
 <p>In case you didn't know, the <a href="https://passdatacommunitysummit.com/speakers">Call for Speakers</a> for the <a href="https://passdatacommunitysummit.com">PASS Data Community Summit</a> has been open since May 27. PASS Summit has been the one of the largest and highest profile annual conferences for data platform professionals, mainly around the Microsoft Data Platform.</p>
 <p>While I have spoken at PASS for the past three years, and it has been an incredibly valuable and rewarding experience, I am not submitting any sessions this year. Why, you ask? To put it very simply, I'm tired, low on ideas, and a bit burnt out on the virtual conference format. For me, the virtual conference format is really hard. Having a live audience is really important to me when I am speaking, and none of the virtual conference formats have really solved the audience participation problem. Last year's PASS Summit was one of the better ones (along with NDC Sydney 2020); it still did not work well for me. Adding on to that, my work (that allows me to speak at all kinds of conferences) has been insanely busy since, well, right around this time last year (feel free to reach out if you're looking for work and are interested in consulting - we are hiring, just like everyone else). While I am normally able to devote some work time to developing new ideas, abstracts, and talks, that just has not been possible over the past year. So it goes.</p>
-<p>All of that being said, you, dear reader, should still consider submitting to speak! The data community is in desperate need of new (and diverse) blood and ideas. PASS Summit is huge, and you will gain valuable experience (not to mention some of the best constructive feedback on your content and delivery). And, as I say to most of my audiences, you have something unique to share that others want to learn! Take the plunge!</p>
-]]></content:encoded>
+<p>All of that being said, you, dear reader, should still consider submitting to speak! The data community is in desperate need of new (and diverse) blood and ideas. PASS Summit is huge, and you will gain valuable experience (not to mention some of the best constructive feedback on your content and delivery). And, as I say to most of my audiences, you have something unique to share that others want to learn! Take the plunge!</p>]]></content:encoded>
         </item>
     
         <item>
@@ -409,8 +419,7 @@ GO</code></pre>
             <content:encoded><![CDATA[<h2>Welcome to my new blog site</h2>
 <p>When I first put together my blog in late 2018/early 2019, I chose Wordpress since it enabled me to get going very quickly with low overhead. Over time, I've become more and more frustrated with the user experience and maintenance overhead that Wordpress brings (not to mention the Azure bill). At the same time, I've been reading more about static site generation, and the benefits it can bring to small sites like mine.</p>
 <p>After a false start at the beginning of the COVID-19 pandemic with Metalsmith, I decided to try Next.js, and, here we are! This blog is built on Next.js using TypeScript, Bootstrap, and Font Awesome Pro. I can't say enough about the development experience that Next.js offers, and its tutorial teaches really useful concepts.</p>
-<p>I can't promise that I will be better at updating on a regular basis, but I will try.</p>
-]]></content:encoded>
+<p>I can't promise that I will be better at updating on a regular basis, but I will try.</p>]]></content:encoded>
         </item>
     
         <item>
@@ -444,7 +453,8 @@ GO</code></pre>
     ,<span class="hljs-variable">@quantity</span> <span class="hljs-type">INT</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
     ,<span class="hljs-variable">@unitPrice</span> <span class="hljs-type">DECIMAL</span>(<span class="hljs-number">18</span>,<span class="hljs-number">2</span>) <span class="hljs-operator">=</span> <span class="hljs-keyword">NULL</span>
 <span class="hljs-keyword">AS</span>
-<span class="hljs-keyword">BEGIN</span></code></pre>
+<span class="hljs-keyword">BEGIN</span>
+</code></pre>
 <p>From here, we set up the base of our dynamic SQL statement:</p>
 <pre><code class="hljs language-sql"><span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@sql</span> NVARCHAR(MAX);
 
@@ -479,7 +489,8 @@ GO</code></pre>
             ,OL.PickingCompletedWhen
             ,OL.LastEditedBy
             ,OL.LastEditedWhen
-        FROM Sales.Orders AS O LEFT JOIN Sales.OrderLines AS OL ON O.OrderID = OL.OrderID '</span>;</code></pre>
+        FROM Sales.Orders AS O LEFT JOIN Sales.OrderLines AS OL ON O.OrderID = OL.OrderID '</span>;
+</code></pre>
 <p>Next, we add each parameter to a table variable like so:</p>
 <pre><code class="hljs language-sql"><span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@whereParameters</span> <span class="hljs-keyword">TABLE</span> (WhereParameter <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">200</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span>);
 
@@ -488,7 +499,8 @@ IF (<span class="hljs-variable">@customerID</span> <span class="hljs-keyword">IS
     <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> <span class="hljs-variable">@whereParameters</span>
     <span class="hljs-keyword">SELECT</span> <span class="hljs-string">' O.CustomerID = @customerID '</span>;
 
-<span class="hljs-comment">-- Additional parameters omitted for brevity.</span></code></pre>
+<span class="hljs-comment">-- Additional parameters omitted for brevity.</span>
+</code></pre>
 <p>After we have checked all the parameters, we add them together to form a single where clause and add that to our base SQL statement.</p>
 <pre><code class="hljs language-sql"><span class="hljs-comment">-- If we have any where parameters, concatenate them and add a where clause to the</span>
 <span class="hljs-comment">-- base SQL statement.</span>
@@ -504,7 +516,8 @@ IF (
 
     <span class="hljs-keyword">SET</span> <span class="hljs-variable">@whereClause</span> <span class="hljs-operator">=</span> <span class="hljs-string">'WHERE'</span> <span class="hljs-operator">+</span> <span class="hljs-keyword">LEFT</span>(<span class="hljs-variable">@whereClause</span>, LEN(<span class="hljs-variable">@whereClause</span>) <span class="hljs-operator">-</span> <span class="hljs-number">4</span>);
     <span class="hljs-keyword">SET</span> <span class="hljs-variable">@sql</span> <span class="hljs-operator">=</span> <span class="hljs-variable">@sql</span> <span class="hljs-operator">+</span> <span class="hljs-variable">@whereClause</span>;
-<span class="hljs-keyword">END</span>;</code></pre>
+<span class="hljs-keyword">END</span>;
+</code></pre>
 <p>We create the parameter list:</p>
 <pre><code class="hljs language-sql"><span class="hljs-comment">-- Declare and hydrate the parameters list.</span>
 <span class="hljs-comment">-- Even if the particular parameter is not included in the query, we can still include it in the parameters list.</span>
@@ -513,7 +526,8 @@ IF (
 
 <span class="hljs-keyword">SET</span> <span class="hljs-variable">@params</span> <span class="hljs-operator">=</span> N<span class="hljs-string">'@customerID INT, @salesPersonID INT, @contactPersonID INT, @orderDate DATE,
         @expectedDeliveryDate DATE, @customerPurchaseOrderNumber NVARCHAR(20), @stockItemID INT,
-        @description NVARCHAR(100), @quantity INT, @unitPrice DECIMAL(18,2)'</span>;</code></pre>
+        @description NVARCHAR(100), @quantity INT, @unitPrice DECIMAL(18,2)'</span>;
+</code></pre>
 <p>Lastly, we call <code>sp_executesql</code> using our dynamic SQL, the parameter list, and each of the parameters we passed in above.</p>
 <pre><code class="hljs language-sql"><span class="hljs-keyword">EXEC</span> sp_executesql <span class="hljs-variable">@sql</span>
     ,<span class="hljs-variable">@params</span>
@@ -526,7 +540,8 @@ IF (
     ,<span class="hljs-variable">@stockItemID</span>
     ,<span class="hljs-variable">@description</span>
     ,<span class="hljs-variable">@quantity</span>
-    ,<span class="hljs-variable">@unitPrice</span>;</code></pre>
+    ,<span class="hljs-variable">@unitPrice</span>;
+</code></pre>
 <p>Because we have created fully parameterized SQL, SQL Server will create only one execution plan for each combination of parameters we pass in. Additionally, we can safely pass the NULL parameters, and <code>sp_executesql</code> will ignore those. It is even possible to pass sorting criteria and filter by other tables by adding joins dynamically. (Note: the code included in the Github repository at the end of the article also contains debug logic).</p>
 <h3>The API</h3>
 <p>Our ASP.NET Core 3.1 application already has a connection string to our database available via configuration (and injectable using .NET Core’s built-in dependency injection framework). We also have other conveniences set up.</p>
@@ -585,7 +600,8 @@ IF (
     <span class="hljs-comment"><span class="hljs-doctag">///</span> Unit Price to search for.</span>
     <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;/summary></span></span>
     <span class="hljs-keyword">public</span> <span class="hljs-built_in">decimal</span>? UnitPrice { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
-}</code></pre>
+}
+</code></pre>
 <p>From here, we define our controller endpoint:</p>
 <pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
 <span class="hljs-comment"><span class="hljs-doctag">///</span> Searches orders.</span>
@@ -608,7 +624,8 @@ IF (
         <span class="hljs-keyword">this</span>._logger.LogError(exception: ex, message: <span class="hljs-string">"Error occurred."</span>);
         <span class="hljs-keyword">return</span> BadRequest(<span class="hljs-string">"Error occurred."</span>);
     }
-}</code></pre>
+}
+</code></pre>
 <p>Now, we need to define our repository method. This is a three-step process.</p>
 <p>First, we need to create a mapper to help Dapper map the result of our stored procedure:</p>
 <pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
@@ -653,7 +670,8 @@ IF (
 
         <span class="hljs-keyword">return</span> !found ? entity : <span class="hljs-literal">default</span>(TParent);
     }
-}</code></pre>
+}
+</code></pre>
 <p>Then, we add the method signature to the interface for the Order Repository:</p>
 <pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
 <span class="hljs-comment"><span class="hljs-doctag">///</span> Interface that describes an Order Repository</span>
@@ -666,7 +684,8 @@ IF (
     <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;param name="searchModel"></span>Search Model to use.<span class="hljs-doctag">&#x3C;/param></span></span>
     <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;returns></span>Found records or <span class="hljs-doctag">&#x3C;c></span>null<span class="hljs-doctag">&#x3C;/c></span> if none found.<span class="hljs-doctag">&#x3C;/returns></span></span>
     <span class="hljs-function">IEnumerable&#x3C;Order> <span class="hljs-title">SearchOrders</span>(<span class="hljs-params">OrderSearchModel searchModel</span>)</span>;
-}</code></pre>
+}
+</code></pre>
 <p>Last, we wire up the method inside the Order Repository. We only add parameters that have values from the API, and we create a concrete version of the mapper.</p>
 <pre><code class="hljs language-c#"><span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
 <span class="hljs-comment"><span class="hljs-doctag">///</span> Searches Orders using the supplied <span class="hljs-doctag">&#x3C;paramref name="searchModel"/></span>.</span>
@@ -701,7 +720,8 @@ IF (
         <span class="hljs-keyword">return</span> connection.Query&#x3C;Order, OrderLine, Order>(<span class="hljs-string">"Sales.SearchOrders"</span>, param: parameters,
             map: mapper.Map, splitOn: <span class="hljs-string">"OrderLineID"</span>, commandType: CommandType.StoredProcedure).Where(result => result != <span class="hljs-literal">null</span>);
     }
-}</code></pre>
+}
+</code></pre>
 <p>Finally, all that is left is to build our code and test the endpoint. As it is a normal RESTful API, we can use a variety of tools to test our GET method, even using Chrome.</p>
 <h2>Conclusion</h2>
 <p>In this article, you have learned how to leverage dynamic SQL to create a flexible stored procedure that can be called from Dapper and used for flexible search needs from a RESTful API. This method can even be extended for use with Entity Framework Core using the <code>FromSqlRaw</code> method. Using this technique allows for plan reuse and flexible searching while avoiding potentially ugly ORM-generated SQL.</p>
@@ -712,8 +732,7 @@ IF (
 <li>Brent Ozar on Dynamic SQL: <a href="https://www.brentozar.com/sql/dynamic/">https://www.brentozar.com/sql/dynamic/</a></li>
 <li>Dapper: <a href="https://github.com/StackExchange/Dapper">https://github.com/StackExchange/Dapper</a></li>
 <li>Entity Framework Core Raw SQL: <a href="https://docs.microsoft.com/en-us/ef/core/querying/raw-sql">https://docs.microsoft.com/en-us/ef/core/querying/raw-sql</a></li>
-</ul>
-]]></content:encoded>
+</ul>]]></content:encoded>
         </item>
     
         <item>
@@ -737,7 +756,8 @@ IF (
     }
 
     <span class="hljs-comment">// Remainder of DbContext elided</span>
-}</code></pre>
+}
+</code></pre>
 <p>In this case, we are attaching the <code>Log.Debug</code> method from <a href="https://serilog.net/">Serilog</a> to the <code>Log</code> property. Now, whenever we run a query, we will get output to our logs similar to the following.</p>
 <pre><code class="hljs language-c#"><span class="hljs-function"><span class="hljs-keyword">public</span> IEnumerable&#x3C;Order> <span class="hljs-title">GetOrders</span>()</span>
 {
@@ -751,7 +771,8 @@ IF (
     }
 
     <span class="hljs-keyword">return</span> results;
-}</code></pre>
+}
+</code></pre>
 <img class="blog-image" src="/images/inline-blog/entity-framework-logging-output.png" alt="Entity Framework Logging Output">
 <p>As you can see, we get a pretty good set of information from Entity Framework. We get timing information, such as when the connection was opened, when the query executed, and when the query was closed. Additionally, we get the query text and how long the query took to execute, 142ms in this case.</p>
 <h3>Entity Framework Core</h3>
@@ -774,14 +795,14 @@ IF (
     }
 
     <span class="hljs-comment">// Remainder of DbContext elided</span>
-}</code></pre>
+}
+</code></pre>
 <p>To make it even simpler, <code>ILoggerFactory</code> is registered in the default DI container by the framework, so the only thing we have to do is register our logging framework with the logging pipeline.</p>
 <p>Executing a similar query as above gives us the following output.</p>
 <img class="blog-image" src="/images/inline-blog/entity-framework-core-logging-output.png" alt="Entity Framework Core Logging Output">
 <p>Well, that is certainly more information! In addition to our query, which took 345ms to run, we also get feedback from the framework on possible issues, such as potential type issues and an issue with our LINQ query.</p>
 <h3>Conclusion</h3>
-<p>In this post, we have seen how to log generated SQL from Entity Framework and Entity Framework Core. Additionally, we have seen the additional information we can log. Together, this information can be a valuable tool for helping to ensure our ORMs are not causing performance issues in our applications or databases.</p>
-]]></content:encoded>
+<p>In this post, we have seen how to log generated SQL from Entity Framework and Entity Framework Core. Additionally, we have seen the additional information we can log. Together, this information can be a valuable tool for helping to ensure our ORMs are not causing performance issues in our applications or databases.</p>]]></content:encoded>
         </item>
     
         <item>
@@ -795,7 +816,8 @@ IF (
 <p>We'll walk through the most useful configuration options for Entity Framework Core one by one.</p>
 <h3>Configure Warnings</h3>
 <p>The <code>ConfigureWarnings</code> method is incredibly powerful and can help you avoid issues with how queries are executed as well as giving you more insight into how EF Core is actually executing your queries. Its signature looks like the following:</p>
-<pre><code class="hljs language-c#"><span class="hljs-keyword">public</span> <span class="hljs-keyword">virtual</span> Microsoft.EntityFrameworkCore.<span class="hljs-function">DbContextOptionsBuilder <span class="hljs-title">ConfigureWarnings</span> (<span class="hljs-params">Action&#x3C;Microsoft.EntityFrameworkCore.Diagnostics.WarningsConfigurationBuilder> warningsConfigurationBuilderAction</span>)</span>;</code></pre>
+<pre><code class="hljs language-c#"><span class="hljs-keyword">public</span> <span class="hljs-keyword">virtual</span> Microsoft.EntityFrameworkCore.<span class="hljs-function">DbContextOptionsBuilder <span class="hljs-title">ConfigureWarnings</span> (<span class="hljs-params">Action&#x3C;Microsoft.EntityFrameworkCore.Diagnostics.WarningsConfigurationBuilder> warningsConfigurationBuilderAction</span>)</span>;
+</code></pre>
 <p>In practice, you can invoke it like the following, in this case configuring it to throw an exception when a query is evaluated client side:</p>
 <pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
@@ -803,7 +825,8 @@ IF (
         {
             warningsAction.Throw(RelationalEventId.QueryClientEvaluationWarning);
         });
-    });</code></pre>
+    });
+</code></pre>
 <p>There are four methods for the <code>WarningsConfigurationBuilder</code> as illustrated below:</p>
 <pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
@@ -821,7 +844,8 @@ IF (
             <span class="hljs-comment">// Specifies the event or events to throw an exception when they are encountered.</span>
             warningsAction.Throw(RelationalEventId.QueryClientEvaluationWarning);
         }); 
-    });</code></pre>
+    });
+</code></pre>
 <p>What are the events you can configure here? They are either <a href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.diagnostics.coreeventid?view=efcore-5.0">Core Events</a> or <a href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.diagnostics.relationaleventid?view=efcore-5.0">Relational Events</a>. Core Events are generally related to the base implementation of the ORM, such as cascade deletes or value generation. Relational Events are events specifically related to Relational Databases, such as transaction usage, migration statistics, and some query statistics.</p>
 <h4>Should I Use These?</h4>
 <p>In general, these will probably clutter up your log way more than you would like. However, there are a couple that are worth logging or throwing an exception when working with earlier versions of Entity Framework Core:</p>
@@ -845,7 +869,8 @@ Like our FirstWithoutOrderByAndFilterWarning above, use this to detect when your
 <pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
         optionsAction.EnableDetailedErrors();
-    });</code></pre>
+    });
+</code></pre>
 <h4>Should I Use This?</h4>
 <p>In development, this should always be enabled. You should not need it in a higher environment, and its performance hit renders it a sub-optimal choice for production environments.</p>
 <h3>EnableSensitiveDataLogging</h3>
@@ -854,7 +879,8 @@ Like our FirstWithoutOrderByAndFilterWarning above, use this to detect when your
 <pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
         optionsAction.EnableSensitiveDataLogging();
-    });</code></pre>
+    });
+</code></pre>
 <h4>Should I Use This?</h4>
 <p>Can be very useful in development, as long as you make sure you are following all relevant regulations. <strong><em>Do not use in production. Ever.</em></strong></p>
 <h3>UseLazyLoadingProxies</h3>
@@ -863,7 +889,8 @@ Like our FirstWithoutOrderByAndFilterWarning above, use this to detect when your
 <pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
         optionsAction.UseLazyLoadingProxies();
-    });</code></pre>
+    });
+</code></pre>
 <h4>Should I Use This?</h4>
 <p>This one is purely up to you. There are performance considerations to using lazy loading. I prefer not to use it, mainly to avoid the "N+1" query problem.</p>
 <h3>UseQueryTrackingBehavior</h3>
@@ -872,12 +899,12 @@ Like our FirstWithoutOrderByAndFilterWarning above, use this to detect when your
 <pre><code class="hljs language-c#">services.AddDbContext&#x3C;WideWorldImportersContext>(optionsAction =>
     {
         optionsAction.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-    });</code></pre>
+    });
+</code></pre>
 <h4>Should I Use This?</h4>
 <p>As noted above, if you are only performing read operations (or very few operations that would require tracking), this can provide performance benefits. Otherwise, I would avoid it so that you are not littering your code with <code>AsTracking()</code> calls.</p>
 <h3>In Conclusion</h3>
-<p>We have talked about some of the most useful configuration options for Entity Framework Core. There are additional options for configuring the Service Provider used by the framework; however, this should not generally be used. Using these options can help the performance of EF Core and can help you get more (and more useful) information during development.</p>
-]]></content:encoded>
+<p>We have talked about some of the most useful configuration options for Entity Framework Core. There are additional options for configuring the Service Provider used by the framework; however, this should not generally be used. Using these options can help the performance of EF Core and can help you get more (and more useful) information during development.</p>]]></content:encoded>
         </item>
     
       </channel>

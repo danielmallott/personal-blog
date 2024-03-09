@@ -12,7 +12,7 @@ headerImage: '/images/blog-header/logging-generated-sql-in-entity-framework-and-
 
 ### Enter `.TagWith()`
 
-Starting with EF Core 2.2, you can add `[.TagWith()](https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.tagwith?view=efcore-6.0)` to your LINQ statement, like so:
+Starting with EF Core 2.2, you can add [`.TagWith()`](https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.tagwith?view=efcore-6.0) to your LINQ statement, like so:
 
 ```c#
 return await this._dbContext
@@ -30,7 +30,7 @@ You can add what ever `string` you like as an argument for `.TagWith()`, and you
 
 ### What About `.TagWithCallSite()`?
 
-If you are using EF Core 6.x, there is an additional extension method that provides some great information. By adding `[.TagWithCallSite()](https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.tagwithcallsite?view=efcore-6.0)`, the query will get tagged with the source file name and line where the method was called from:
+If you are using EF Core 6.x, there is an additional extension method that provides some great information. By adding [`.TagWithCallSite()`](https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.tagwithcallsite?view=efcore-6.0), the query will get tagged with the source file name and line where the method was called from:
 
 ```c#
 return await this._dbContext
