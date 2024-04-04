@@ -9,6 +9,9 @@ RUN npm install --production
 
 FROM node:alpine AS builder
 WORKDIR /app
+
+ENV NEXT_PUBLIC_GOOGLE_ANALYTICS='G-WH1PW1XWZ4'
+
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
 RUN npm run build && npm prune --production
