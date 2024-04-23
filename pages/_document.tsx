@@ -17,6 +17,11 @@ class CustomDocument extends Document {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
+            
+            gtag('consent', 'default', {
+              'analytics_storage': 'denied'
+            });
+
             gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}', {
               page_path: window.location.pathname,
             });
