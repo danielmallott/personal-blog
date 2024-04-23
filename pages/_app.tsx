@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import AppInsightContextProvider from '../components/app-insights-context-provider';
 import { logPageView } from '../lib/ga';
 import '../styles/main.scss';
+import CookieBanner from '../components/cookie-banner';
 
 function MyApp ({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -23,6 +24,7 @@ function MyApp ({ Component, pageProps }: AppProps) {
   return (
     <AppInsightContextProvider>
       <Component {...pageProps} />
+      <CookieBanner />
     </AppInsightContextProvider>
   );
 }
