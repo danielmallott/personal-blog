@@ -5,9 +5,117 @@
         <link>https://www.danielmallott.com</link>
         <description>Talking .NET, SQL Server, and Software Development</description>
         <language>en</language>
-        <lastBuildDate>Fri, 27 Oct 2023 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Mon, 29 Apr 2024 00:00:00 GMT</lastBuildDate>
         <atom:link href="https://www.danielmallott.com" rel="self" type="application/rss+xml"/>
         
+        <item>
+            <guid>https://www.danielmallott.com/posts/dotnet-configuration-loading</guid>
+            <title>Loading Configuration in Dotnet - Order Does Matter, Just Not How You Might Expect</title>
+            <description>Loading configuration in modern dotnet is easy, and incredibly automated, but loading custom files doesn't always work the way you would expect, which can lead to interesting bugs.</description>
+            <link>https://www.danielmallott.com/posts/dotnet-configuration-loading</link>
+            <pubDate>Mon, 29 Apr 2024 00:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>Loading Configuration</h2>
+<h3>The Standard Setup</h3>
+<p>By now, most of us are familiar with the basics of bootstrapping a .NET 8 application. If you create a new .NET 8 API project, you will get boilerplate code that looks like this in your <code>Program.cs</code> file:</p>
+<pre><code class="hljs language-c#"><span class="hljs-keyword">var</span> builder = WebApplication.CreateBuilder(args);
+
+<span class="hljs-comment">// Add services to the container.</span>
+<span class="hljs-comment">// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle</span>
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+<span class="hljs-keyword">var</span> app = builder.Build();
+
+<span class="hljs-comment">// Configure the HTTP request pipeline.</span>
+<span class="hljs-keyword">if</span> (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+<span class="hljs-keyword">var</span> summaries = <span class="hljs-keyword">new</span>[]
+{
+    <span class="hljs-string">"Freezing"</span>, <span class="hljs-string">"Bracing"</span>, <span class="hljs-string">"Chilly"</span>, <span class="hljs-string">"Cool"</span>, <span class="hljs-string">"Mild"</span>, <span class="hljs-string">"Warm"</span>, <span class="hljs-string">"Balmy"</span>, <span class="hljs-string">"Hot"</span>, <span class="hljs-string">"Sweltering"</span>, <span class="hljs-string">"Scorching"</span>
+};
+
+app.MapGet(<span class="hljs-string">"/weatherforecast"</span>, () =>
+{
+    <span class="hljs-keyword">var</span> forecast =  Enumerable.Range(<span class="hljs-number">1</span>, <span class="hljs-number">5</span>).Select(index =>
+        <span class="hljs-keyword">new</span> WeatherForecast
+        (
+            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            Random.Shared.Next(<span class="hljs-number">-20</span>, <span class="hljs-number">55</span>),
+            summaries[Random.Shared.Next(summaries.Length)]
+        ))
+        .ToArray();
+    <span class="hljs-keyword">return</span> forecast;
+})
+.WithName(<span class="hljs-string">"GetWeatherForecast"</span>)
+.WithOpenApi();
+
+app.Run();
+
+<span class="hljs-keyword">record</span> <span class="hljs-title">WeatherForecast</span>(<span class="hljs-title">DateOnly</span> <span class="hljs-title">Date</span>, <span class="hljs-title">int</span> <span class="hljs-title">TemperatureC</span>, <span class="hljs-title">string</span>? <span class="hljs-title">Summary</span>)
+{
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span> TemperatureF => <span class="hljs-number">32</span> + (<span class="hljs-built_in">int</span>)(TemperatureC / <span class="hljs-number">0.5556</span>);
+}
+</code></pre>
+<p>The <code>WebApplication.CreateBuilder(args)</code> method hides a lot wiring things up under the covers, including loading configuration into the DI container for use by services. And, honestly, this is great, and a vast improvement over the old method(s) of loading configuration we had to use in the .NET Framework days. Microsoft has even <a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/generic-host?tabs=appbuilder#host-builder-settings">documented the load order</a>, which matches what you would expect:</p>
+<ol>
+<li><code>appsettings.json</code></li>
+<li>Environment-specific <code>appsettings.&#x3C;environment>.json</code> file, using the <code>ASPNETCORE_ENVIRONMENT</code> environment variable defined on the host</li>
+<li>Secret Manager (when running in the <code>Development</code> environment)</li>
+<li>Environment variables from the host, substituting <code>__</code> for level nesting in JSON</li>
+<li>Command line arguments, using the same substitution as in we have for Environment variables</li>
+</ol>
+<p>Each subsequent configuration source in the load order can override settings that were loaded before it. For example, you might configuration your logging globally in the <code>appsettings.json</code> file and then override the default level in your <code>appsettings.&#x3C;environment>.json</code> file to make sure you are only logging errors in production, but debug messages in development. Finally, you might change the environment variable on one deployment in production (and restart the service) to troubleshoot some temporary issue.</p>
+<h3>Custom Configuration</h3>
+<p>We are not limited to only the configuration loaded by default. We might want to separate our configuration into logical chunks, rather than one large file. We might want to load secrets from files mounted in volumes to our containers to avoid exposing them as Environment variables.</p>
+<p>The good news is that we can add any number of custom configurations. We just have to add some code to do that, like the following:</p>
+<pre><code class="hljs language-c#"><span class="hljs-keyword">var</span> config = <span class="hljs-keyword">new</span> ConfigurationBuilder().AddJsonFile(<span class="hljs-string">"appsettings.Override.json"</span>).Build();
+
+<span class="hljs-keyword">var</span> builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddConfiguration(config);
+
+<span class="hljs-comment">// Rest of builder registrations skipped</span>
+
+<span class="hljs-keyword">var</span> app = builder.Build();
+
+<span class="hljs-comment">// Rest of Program.cs skipped</span>
+</code></pre>
+<p>In addition to JSON files, we can also add XML, key per file, and many others (as outlined <a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/configuration-providers">here</a>).</p>
+<h3>The Confusing Bit</h3>
+<p>Now, as you might have gathered from the code sample above, there is something odd going on with the load order.</p>
+<p>Our <code>appsettings.Override.json</code> has the following content:</p>
+<pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"Logging"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"LogLevel"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"Default"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Warning"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"Microsoft.AspNetCore"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Error"</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"AllowedHosts"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"*"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"ASPNETCORE_ENVIRONMENT"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Test"</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+<p>When we start the application, knowing the loading order and that the value of the <code>ASPNETCORE_ENVIRONMENT</code> environment variable is <code>Development</code>, what would you expect the value of <code>ASPNETCORE_ENVIRONMENT</code> to be after we finish loading all the configuration?</p>
+<p>If you said <code>Test</code>, you would be right, and you win a cookie. If you said anything else, well, you are making an assumption about how all this works, and you know what they say about assumptions.</p>
+<h3>But Why?</h3>
+<p>This behavior might seem a bit strange, but it is important to remember a key part of configuring pipelines in modern dotnet - <em>order matters</em>.</p>
+<p>So, in this case, you have an already established pipeline, as defined by the <code>WebApplication.CreateBuilder(args)</code> method call. Thus, when you add a new configuration pipeline, in this case defined on the first line, it <em>adds</em> it to the existing pipeline, rather than replacing the pipeline you had already.</p>
+<p>This is probably not the behavior you expected, and it can lead to unexpected configuration values being used in your running application.</p>
+<h3>What To Do?</h3>
+<p>So, how do you control this?</p>
+<p>There are two options:</p>
+<ol>
+<li>Fully define your configuration pipeline to load things in the order you want, which will be explicit in the code.</li>
+<li>Understand that configurations loaded after the default pipeline will override values, and plan accordingly.</li>
+</ol>
+<p>The right choice for you is the one that works best with your workflow and company culture!</p>]]></content:encoded>
+        </item>
+    
         <item>
             <guid>https://www.danielmallott.com/posts/unit-testing-your-database</guid>
             <title>Why You Should Unit Test Your Database</title>

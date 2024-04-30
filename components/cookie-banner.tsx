@@ -55,4 +55,3 @@ export default function CookieBanner () {
     </Container>
   );
 }
-// className={`${cookieConsent !== null ? 'd-none' : 'd-flex'}`}
