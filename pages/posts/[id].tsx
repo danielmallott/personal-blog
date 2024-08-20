@@ -14,7 +14,7 @@ export async function getStaticProps ({ params }: any) {
       postData
     }
   };
-};
+}
 
 export async function getStaticPaths () {
   const paths = getAllPostIds();
@@ -24,7 +24,7 @@ export async function getStaticPaths () {
   };
 }
 
-function Post ({ postData }: {postData: PostData}) {
+function Post ({ postData }: { postData: PostData }) {
   useEffect(() => {
     hljs.configure({
       ignoreUnescapedHTML: true
@@ -38,13 +38,13 @@ function Post ({ postData }: {postData: PostData}) {
       </Head>
       <h1>{postData.title}</h1>
       <small><Date dateString={postData.date} /></small>
-      <hr/>
+      <hr />
       <div dangerouslySetInnerHTML={{ __html: postData.htmlContent }} />
       <hr />
       <div>Thanks for reading!</div>
-      <footer><Link href="/">Back to home</Link></footer>
+      <footer><Link href='/'>Back to home</Link></footer>
     </Layout>
-  )
+  );
 }
 
 export default Post;

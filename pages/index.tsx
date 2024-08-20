@@ -22,21 +22,21 @@ export const getStaticProps: GetStaticProps = async (context: any) => {
       allPostsData
     }
   };
-}
+};
 
 const Home = ({ allPostsData }: { allPostsData: SortedPost[] }) => (
   <Layout home>
     <Row>
       <h1>Latest Blog Posts</h1>
-      <hr/>
-      <Row className="row-cols-1 row-cols-lg-2 row-cols-xl-3 g-1">
+      <hr />
+      <Row className='row-cols-1 row-cols-lg-2 row-cols-xl-3 g-1'>
         {allPostsData.map(({ id, date, title, summary, tags, headerImage }:
-          {id: string, date: string, title: string, summary: string, tags: string, headerImage: string}
+        { id: string, date: string, title: string, summary: string, tags: string, headerImage: string }
         ) => (
           <Col key={id}>
-            <Link className="text-decoration-none" href={`/posts/${id}`} passHref>
+            <Link className='text-decoration-none' href={`/posts/${id}`} passHref>
               <Card>
-                <Card.Img variant="top" src={headerImage} className="card-img-top"/>
+                <Card.Img variant='top' src={headerImage} className='card-img-top' />
                 <Card.Body>
                   <Card.Title>{title}</Card.Title>
                   <Card.Text>
@@ -44,12 +44,12 @@ const Home = ({ allPostsData }: { allPostsData: SortedPost[] }) => (
                   </Card.Text>
                   <Card.Text>
                     {tags.split(',').map((tag) => (
-                        <Badge pill bg="secondary" className="me-1 bg-secondary" key={`${tag}${id}`}>{tag}</Badge>
+                      <Badge pill bg='secondary' className='me-1 bg-secondary' key={`${tag}${id}`}>{tag}</Badge>
                     ))}
                   </Card.Text>
                 </Card.Body>
                 <Card.Footer>
-                  <small className="text-muted"><Date dateString={date}/></small>
+                  <small className='text-muted'><Date dateString={date} /></small>
                 </Card.Footer>
               </Card>
             </Link>

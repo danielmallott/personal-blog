@@ -21,7 +21,7 @@ const initialize = (instrumentationKey: string) => {
   });
 
   appInsights.loadAppInsights();
-}
+};
 
 const handleRouteChange = (url: string) => {
   if (!reactPlugin) {
@@ -31,9 +31,9 @@ const handleRouteChange = (url: string) => {
   reactPlugin.trackPageView({
     uri: url
   });
-}
+};
 
-const AppInsightContextProvider = ({ children }: {children: ReactNode}) => {
+const AppInsightContextProvider = ({ children }: { children: ReactNode }) => {
   const [isInitialized, setInitialized] = useState(false);
   const router = useRouter();
 
@@ -71,7 +71,7 @@ const AppInsightContextProvider = ({ children }: {children: ReactNode}) => {
     <AppInsightsContext.Provider value={reactPlugin}>
       {children}
     </AppInsightsContext.Provider>
-  )
-}
+  );
+};
 
 export default AppInsightContextProvider;

@@ -1,5 +1,5 @@
-import { h } from 'hastscript'
-import { visit } from 'unist-util-visit'
+import { h } from 'hastscript';
+import { visit } from 'unist-util-visit';
 
 function remarkNotePlugin () {
   /**
@@ -24,7 +24,7 @@ function remarkNotePlugin () {
         data.hProperties = h(tagName, node.attributes || {}).properties;
       }
     });
-  }
+  };
 }
 
 export default remarkNotePlugin;
