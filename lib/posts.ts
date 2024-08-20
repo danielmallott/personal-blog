@@ -30,7 +30,7 @@ export function getSortedPostsData (): SortedPost[] {
       summary: matterResult.data.summary,
       tags: matterResult.data.tags,
       headerImage: matterResult.data.headerImage
-    }
+    };
   });
 
   return allPostsData.sort((a: SortedPost, b: SortedPost) => {
@@ -58,7 +58,7 @@ export function getAllPostIds () {
       params: {
         id: fileName.replace(/\.md$/, '')
       }
-    }
+    };
   });
 }
 

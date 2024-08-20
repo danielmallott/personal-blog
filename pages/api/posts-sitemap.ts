@@ -30,4 +30,4 @@ export default async (req: any, res: any) => {
     console.log(e);
     res.send(JSON.stringify(e));
   }
-}
+};

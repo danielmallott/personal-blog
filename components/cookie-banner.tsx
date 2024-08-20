@@ -37,21 +37,21 @@ export default function CookieBanner () {
     setCookieConsent(true);
     setLocalStorage('cookieConsent', true);
     updateAnalyticsConsent(true);
-  }
+  };
 
   const handleDecline = () => {
     updateCookieBannerVisibility(false);
     setCookieConsent(false);
     setLocalStorage('cookieConsent', false);
-  }
+  };
 
   return (
     <Container fluid className={`${cookieBannerVisible ? 'd-flex' : 'd-none'}`}>
-        <Row id="cookie-banner" className="alert alert-dark text-center mb-0 cookie-banner" role="alert">
-            <Col>
-                This website uses cookies to ensure you get the best experience. <Link href="/info/cookies">Learn More</Link>.  <Button type='button' variant='primary' size='sm' onClick={handleAccept}>Accept</Button>  <Button type='button' variant='secondary' size='sm' onClick={handleDecline}>Decline</Button>
-            </Col>
-        </Row>
+      <Row id='cookie-banner' className='alert alert-dark text-center mb-0 cookie-banner' role='alert'>
+        <Col>
+          This website uses cookies to ensure you get the best experience. <Link href='/info/cookies'>Learn More</Link>.  <Button type='button' variant='primary' size='sm' onClick={handleAccept}>Accept</Button>  <Button type='button' variant='secondary' size='sm' onClick={handleDecline}>Decline</Button>
+        </Col>
+      </Row>
     </Container>
   );
 }

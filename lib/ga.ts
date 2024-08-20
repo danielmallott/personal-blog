@@ -4,7 +4,6 @@ export function logPageView (url: string) {
   });
 }
 
-// eslint-disable-next-line no-undef
-export function logEvent ({ action, params }: {action: string, params: Gtag.EventParams}) {
+export function logEvent ({ action, params }: { action: string, params: Gtag.EventParams }) {
   window.gtag('event', action, params);
 }

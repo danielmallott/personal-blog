@@ -1,6 +1,6 @@
-const next = require('next')
-const { createServer } = require('http')
-const appInsights = require('applicationinsights')
+const next = require('next');
+const { createServer } = require('http');
+const appInsights = require('applicationinsights');
 
 const initAppInsights = (instrumentationKey) => {
   if (!instrumentationKey) {
@@ -14,7 +14,7 @@ const initAppInsights = (instrumentationKey) => {
     .start();
 
   return true;
-}
+};
 
 const startTime = Date.now();
 const env = process.env.APP_ENV || process.env.NODE_ENV || 'production';
@@ -25,7 +25,7 @@ const serverConfig = {
   dev: env === 'development',
   dir: '.',
   quiet: false
-}
+};
 
 const app = next(serverConfig);
 const handleNextRequests = app.getRequestHandler();
@@ -49,11 +49,11 @@ app.prepare().then(() => {
   })
     .once('error', (err) => {
       console.error(err);
-      process.exit(1)
+      process.exit(1);
     })
     .listen(serverConfig.port, serverConfig.hostname, () => {
       if (useAppInsights) {
-        const duration = Date.now() - startTime
+        const duration = Date.now() - startTime;
 
         appInsights.defaultClient.trackMetric({
           name: 'server startup time',
