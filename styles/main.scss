@@ -60,3 +60,13 @@ $card-color: rgb(51, 51, 51);
   z-index: 999;
   border-radius: 0;
 }
+
+.bluesky-widget {
+  height: 400px;
+  overflow: scroll;
+}
+
+.bluesky-widget img {
+  max-width: 100%;
+  height: auto;
+}
