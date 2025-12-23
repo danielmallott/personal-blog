@@ -6,17 +6,18 @@ import { ReactPlugin, AppInsightsContext } from '@microsoft/applicationinsights-
 let reactPlugin: ReactPlugin;
 let appInsights: ApplicationInsights;
 
-const initialize = (instrumentationKey: string) => {
-  if (!instrumentationKey) {
-    throw new Error('Could not initialize App Insights: `instrumentationKey` was not provided');
+const initialize = (connectionString: string) => {
+  if (!connectionString) {
+    throw new Error('Could not initialize App Insights: `connectionString` was not provided');
   }
 
   reactPlugin = new ReactPlugin();
 
   appInsights = new ApplicationInsights({
     config: {
-      instrumentationKey,
-      extensions: [reactPlugin]
+      connectionString,
+      extensions: [reactPlugin],
+      enableAutoRouteTracking: true
     }
   });
 
@@ -38,9 +39,9 @@ const AppInsightContextProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const instrumentationKey = process.env.NEXT_PUBLIC_APPINSIGHTS_INSTRUMENTATIONKEY;
+    const connectionString = process.env.NEXT_PUBLIC_APPINSIGHTS_CONNECTION_STRING; // process.env.NEXT_PUBLIC_APPINSIGHTS_INSTRUMENTATIONKEY;
 
-    if (!instrumentationKey || !!appInsights) {
+    if (!connectionString || !!appInsights) {
       return;
     }
 
@@ -48,7 +49,7 @@ const AppInsightContextProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    initialize(instrumentationKey);
+    initialize(connectionString);
 
     handleRouteChange(router.asPath);
 
