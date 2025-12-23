@@ -19,8 +19,8 @@ RUN npm run build && npm prune --production
 FROM node:alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV HOSTNAME 0.0.0.0
+ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
 
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
@@ -38,4 +38,4 @@ USER nextjs
 
 EXPOSE 3000
 
-CMD npm run start
+CMD ["npm", "run", "start"]

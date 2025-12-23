@@ -4,6 +4,7 @@ const appInsights = require('applicationinsights');
 
 const initAppInsights = (instrumentationKey) => {
   if (!instrumentationKey) {
+    console.log('Application Insights instrumentation key not provided. Skipping setup.');
     return false;
   }
 
@@ -18,7 +19,7 @@ const initAppInsights = (instrumentationKey) => {
 
 const startTime = Date.now();
 const env = process.env.APP_ENV || process.env.NODE_ENV || 'production';
-const useAppInsights = initAppInsights(process.env.NEXT_PUBLIC_APPINSIGHTS_INSTRUMENTATIONKEY);
+const useAppInsights = initAppInsights(process.env.NEXT_PUBLIC_APPINSIGHTS_CONNECTION_STRING); // initAppInsights(process.env.NEXT_PUBLIC_APPINSIGHTS_INSTRUMENTATIONKEY);
 const serverConfig = {
   hostname: process.env.HOSTNAME || 'localhost',
   port: process.env.PORT || 3000,
@@ -32,10 +33,19 @@ const handleNextRequests = app.getRequestHandler();
 
 app.prepare().then(() => {
   createServer(async (req, res) => {
+    const requestStartTime = Date.now();
+
     if (useAppInsights) {
-      appInsights.defaultClient.trackNodeHttpRequest({
-        request: req,
-        response: res
+      res.on('finish', () => {
+        const duration = Date.now() - requestStartTime;
+        appInsights.defaultClient.trackRequest({
+          name: `${req.method} ${req.url}`,
+          url: req.url,
+          duration,
+          resultCode: res.statusCode,
+          success: res.statusCode < 400,
+          properties: { method: req.method }
+        });
       });
     }
 
@@ -56,7 +66,7 @@ app.prepare().then(() => {
         const duration = Date.now() - startTime;
 
         appInsights.defaultClient.trackMetric({
-          name: 'server startup time',
+          name: 'server_startup_time',
           value: duration
         });
       }
