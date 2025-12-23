@@ -17,7 +17,7 @@
             <content:encoded><![CDATA[<h2>Loading Configuration</h2>
 <h3>The Standard Setup</h3>
 <p>By now, most of us are familiar with the basics of bootstrapping a .NET 8 application. If you create a new .NET 8 API project, you will get boilerplate code that looks like this in your <code>Program.cs</code> file:</p>
-<pre><code class="hljs language-c#"><span class="hljs-keyword">var</span> builder = WebApplication.CreateBuilder(args);
+<pre><code class="hljs language-c#"><span class="hljs-keyword">var</span> builder = WebApplication.CreateBuilder(<span class="hljs-keyword">args</span>);
 
 <span class="hljs-comment">// Add services to the container.</span>
 <span class="hljs-comment">// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle</span>
@@ -76,7 +76,7 @@ app.Run();
 <p>The good news is that we can add any number of custom configurations. We just have to add some code to do that, like the following:</p>
 <pre><code class="hljs language-c#"><span class="hljs-keyword">var</span> config = <span class="hljs-keyword">new</span> ConfigurationBuilder().AddJsonFile(<span class="hljs-string">"appsettings.Override.json"</span>).Build();
 
-<span class="hljs-keyword">var</span> builder = WebApplication.CreateBuilder(args);
+<span class="hljs-keyword">var</span> builder = WebApplication.CreateBuilder(<span class="hljs-keyword">args</span>);
 builder.Configuration.AddConfiguration(config);
 
 <span class="hljs-comment">// Rest of builder registrations skipped</span>
@@ -126,7 +126,7 @@ builder.Configuration.AddConfiguration(config);
 <p>Unit Testing, also known as Component Testing, is a level of software testing where individual units or components of a software system are tested. A unit is the smallest piece of code that can be logically isolated in a system. In traditional software development, we often write unit tests on <em>functions</em> within <em>classes</em>.</p>
 <p>A good unit testing suite can help developers find issues early (i.e., push left), create a code contract protecting against unintended changes, ensure adherence to acceptance criteria, and provide a living documentation of how code is meant to be consumed.</p>
 <p>However, developers often skip writing unit tests or do not create comprehensive unit test suites. Reasons for this include that they do not (necessarily) catch integration issues, realistic unit tests can be difficult to set up, and there can be significant extra development effort associated with writing unit tests.</p>
-<p>When it comes to testing database code, we have traditionally lagged <em>far</em> behind our application developer brethren, writing code and then doing some ad hoc testing and calling it good. The reality is we should be practicing the same rigor application developers do and testing the business logic in our databases. This business logic is often encapsulated in stored procedures, but may also be in functions, constraints, or even foreign keys. Sometimes there are complicated calculations living inside the database that are barely tested after being written. All of these things are vulnerable to schema changes or version upgrades, and the last thing we want is to get a 3:00AM page because the monthly/quarterly/yearly financial report started throwing out wrong results! Unit testing can be part of the answer to these problems!</p>
+<p>When it comes to testing database code, we have traditionally lagged <em>far</em> behind our application developer brethren, writing code and then doing some ad hoc testing and calling it good. The reality is we should be practicing the same rigor application developers do and testing the business logic in our databases. This business logic is often encapsulated in stored procedures, but may also be in functions, constraints, or even foreign keys. Sometimes there are complicated calculations living inside the database that are barely tested after being written. All of these things are vulnerable to schema changes or version upgrades, and the last thing we want is to get a 3AM page because the monthly/quarterly/yearly financial report started throwing out wrong results! Unit testing can be part of the answer to these problems!</p>
 <h3>Good Unit Tests</h3>
 <p>Good unit tests have six key features (there may be more, but these are the ones I've chosen to focus on):</p>
 <ul>
@@ -190,7 +190,7 @@ GO
     <span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@InsertedId</span> <span class="hljs-keyword">TABLE</span> (InsertedID <span class="hljs-type">INT</span>);
     
     <span class="hljs-comment">-- Insert new row, capturing the new identity</span>
-    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> Application.People
+    <span class="hljs-keyword">INSERT INTO</span> Application.People
     (FullName, PreferredName, IsPermittedToLogon, IsExternalLogonProvider, IsSystemUser, IsEmployee, IsSalesperson, LastEditedBy)
     OUTPUT inserted.PersonID <span class="hljs-keyword">INTO</span> <span class="hljs-variable">@InsertedId</span>
     <span class="hljs-keyword">VALUES</span>
@@ -251,7 +251,7 @@ GO
         THROW <span class="hljs-number">50001</span>, <span class="hljs-string">'@displayName must not be null'</span>, <span class="hljs-number">1</span>;
     
     <span class="hljs-comment">-- Insert new row, capturing the new identity</span>
-    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> dbo.Users
+    <span class="hljs-keyword">INSERT INTO</span> dbo.Users
     (AboutMe, Age, CreationDate, DisplayName, DownVotes, EmailHash, LastAccessDate, [Location], Reputation, UpVotes, Views, WebsiteUrl, AccountId)
     <span class="hljs-keyword">VALUES</span>
     (<span class="hljs-variable">@aboutMe</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-variable">@displayName</span>, <span class="hljs-number">0</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-variable">@location</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-variable">@websiteUrl</span>, <span class="hljs-keyword">NULL</span>);
@@ -336,7 +336,7 @@ GO
 <span class="hljs-keyword">BEGIN</span>
     <span class="hljs-comment">-- Arrange</span>
     <span class="hljs-keyword">EXEC</span> tSQLt.FakeTable <span class="hljs-variable">@TableName</span> <span class="hljs-operator">=</span> <span class="hljs-string">'dbo.Users'</span>, <span class="hljs-variable">@Identity</span> <span class="hljs-operator">=</span> <span class="hljs-number">1</span>;
-    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> dbo.Users
+    <span class="hljs-keyword">INSERT INTO</span> dbo.Users
     (AboutMe, Age, CreationDate, DisplayName, DownVotes, EmailHash, LastAccessDate, [Location], Reputation, UpVotes, Views, WebsiteUrl, AccountId)
     <span class="hljs-keyword">VALUES</span>
     (<span class="hljs-string">'I''m a test'</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-string">'test-display-name'</span>, <span class="hljs-number">0</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-string">'CI/CD'</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-string">'https://www.contoso.com'</span>, <span class="hljs-keyword">NULL</span>);
@@ -391,7 +391,7 @@ GO
         THROW <span class="hljs-number">50002</span>, <span class="hljs-string">'@displayName already exists'</span>, <span class="hljs-number">1</span>;
     
     <span class="hljs-comment">-- Insert new row, capturing the new identity</span>
-    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> dbo.Users
+    <span class="hljs-keyword">INSERT INTO</span> dbo.Users
     (AboutMe, Age, CreationDate, DisplayName, DownVotes, EmailHash, LastAccessDate, [Location], Reputation, UpVotes, Views, WebsiteUrl, AccountId)
     <span class="hljs-keyword">VALUES</span>
     (<span class="hljs-variable">@aboutMe</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-variable">@displayName</span>, <span class="hljs-number">0</span>, <span class="hljs-keyword">NULL</span>, GETDATE(), <span class="hljs-variable">@location</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-variable">@websiteUrl</span>, <span class="hljs-keyword">NULL</span>);
@@ -600,11 +600,11 @@ GO
         FROM Sales.Orders AS O LEFT JOIN Sales.OrderLines AS OL ON O.OrderID = OL.OrderID '</span>;
 </code></pre>
 <p>Next, we add each parameter to a table variable like so:</p>
-<pre><code class="hljs language-sql"><span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@whereParameters</span> <span class="hljs-keyword">TABLE</span> (WhereParameter <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">200</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span>);
+<pre><code class="hljs language-sql"><span class="hljs-keyword">DECLARE</span> <span class="hljs-variable">@whereParameters</span> <span class="hljs-keyword">TABLE</span> (WhereParameter <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">200</span>) <span class="hljs-keyword">NOT NULL</span>);
 
 <span class="hljs-comment">-- If supplied with a Customer ID, add that to the where parameters</span>
-IF (<span class="hljs-variable">@customerID</span> <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span>)
-    <span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> <span class="hljs-variable">@whereParameters</span>
+IF (<span class="hljs-variable">@customerID</span> <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NOT NULL</span>)
+    <span class="hljs-keyword">INSERT INTO</span> <span class="hljs-variable">@whereParameters</span>
     <span class="hljs-keyword">SELECT</span> <span class="hljs-string">' O.CustomerID = @customerID '</span>;
 
 <span class="hljs-comment">-- Additional parameters omitted for brevity.</span>
