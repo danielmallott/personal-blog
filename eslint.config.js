@@ -21,6 +21,7 @@ module.exports = [
       '.next/**/*',
       '.github/**/*',
       '**/node_modules',
+      'next-env.d.ts',
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
