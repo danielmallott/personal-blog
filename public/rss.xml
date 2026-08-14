@@ -466,7 +466,7 @@ GO
 <p><a href="https://docs.microsoft.com/en-us/ef/core/">Entity Framework Core</a> is an incredibly flexible tool that can abstract a significant part of our database access away. However, we still need to be concerned with performance tuning and tracing. Oftentimes, the DBA team will come to the Development team asking about a specific query, usually when it's performing poorly, or the Development team might ask the DBA team about improving the performance of a specific query. Wouldn't it be great to have a way to easily track down the queries that are coming from your application?</p>
 <h3>Enter <code>.TagWith()</code></h3>
 <p>Starting with EF Core 2.2, you can add <a href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.tagwith?view=efcore-6.0"><code>.TagWith()</code></a> to your LINQ statement, like so:</p>
-<pre><code class="hljs language-c#"><span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> <span class="hljs-keyword">this</span>._dbContext
+<pre><code class="hljs language-c#"><span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> <span class="hljs-keyword">this</span><span class="hljs-number">._</span>dbContext
     .Minifigs
     .TagWith(<span class="hljs-keyword">nameof</span>(GetAll))
     .Select(m => <span class="hljs-keyword">new</span> Minifig(m.MinifigNumber, m.MinifigName, m.NumberOfParts))
@@ -477,7 +477,7 @@ GO
 <p>You can add what ever <code>string</code> you like as an argument for <code>.TagWith()</code>, and you can even add multiple calls to <code>.TagWith()</code> to include additional data, which can be very useful in conditional query scenarios. Now, you can easily search in your logs and in your database's specific query store for those queries!</p>
 <h3>What About <code>.TagWithCallSite()</code>?</h3>
 <p>If you are using EF Core 6.x, there is an additional extension method that provides some great information. By adding <a href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.entityframeworkqueryableextensions.tagwithcallsite?view=efcore-6.0"><code>.TagWithCallSite()</code></a>, the query will get tagged with the source file name and line where the method was called from:</p>
-<pre><code class="hljs language-c#"><span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> <span class="hljs-keyword">this</span>._dbContext
+<pre><code class="hljs language-c#"><span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> <span class="hljs-keyword">this</span><span class="hljs-number">._</span>dbContext
     .Minifigs
     .TagWith(<span class="hljs-keyword">nameof</span>(GetAll))
     .TagWithCallSite()
@@ -725,11 +725,11 @@ IF (
 {
     <span class="hljs-keyword">try</span>
     {
-        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._orderRepository.SearchOrders(searchModel).ToList();
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span><span class="hljs-number">._</span>orderRepository.SearchOrders(searchModel).ToList();
     }
     <span class="hljs-keyword">catch</span> (Exception ex)
     {
-        <span class="hljs-keyword">this</span>._logger.LogError(exception: ex, message: <span class="hljs-string">"Error occurred."</span>);
+        <span class="hljs-keyword">this</span><span class="hljs-number">._</span>logger.LogError(exception: ex, message: <span class="hljs-string">"Error occurred."</span>);
         <span class="hljs-keyword">return</span> BadRequest(<span class="hljs-string">"Error occurred."</span>);
     }
 }
@@ -744,7 +744,7 @@ IF (
 <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;typeparam name="TParentKey"></span>Type of the Key of the Parent entity.<span class="hljs-doctag">&#x3C;/typeparam></span></span>
 <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">EntityOneToManyMapper</span>&#x3C;<span class="hljs-title">TParent</span>,<span class="hljs-title">TChild</span>,<span class="hljs-title">TParentKey</span>>
 {
-    <span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> IDictionary&#x3C;TParentKey, TParent> _lookup = <span class="hljs-keyword">new</span> Dictionary&#x3C;TParentKey, TParent>();
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> IDictionary&#x3C;TParentKey, TParent> <span class="hljs-number">_</span>lookup = <span class="hljs-keyword">new</span> Dictionary&#x3C;TParentKey, TParent>();
 
     <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&#x3C;summary></span></span>
     <span class="hljs-comment"><span class="hljs-doctag">///</span> Add child action. Supplied at Mapper construction.</span>
@@ -767,9 +767,9 @@ IF (
         <span class="hljs-keyword">var</span> found = <span class="hljs-literal">true</span>;
         <span class="hljs-keyword">var</span> primaryKey = ParentKey(parent);
 
-        <span class="hljs-keyword">if</span> (!_lookup.TryGetValue(primaryKey, <span class="hljs-keyword">out</span> <span class="hljs-keyword">var</span> entity))
+        <span class="hljs-keyword">if</span> (!<span class="hljs-number">_</span>lookup.TryGetValue(primaryKey, <span class="hljs-keyword">out</span> <span class="hljs-keyword">var</span> entity))
         {
-            _lookup.Add(primaryKey, parent);
+            <span class="hljs-number">_</span>lookup.Add(primaryKey, parent);
             entity = parent;
             found = <span class="hljs-literal">false</span>;
         }
@@ -888,17 +888,17 @@ IF (
 <p>When Microsoft rewrote Entity Framework for .NET Core, creating Entity Framework Core, it applied the same abstraction principle as in other parts of the new framework. Coupled with first-class Dependency Injection, we can now simply inject an interface, <code>ILoggerFactory</code>, to our <code>DbContext</code> and attach it.</p>
 <pre><code class="hljs language-C#"><span class="hljs-keyword">public</span> <span class="hljs-keyword">partial</span> <span class="hljs-keyword">class</span> <span class="hljs-title">WideWorldImportersContext</span> : <span class="hljs-title">DbContext</span>
 {
-    <span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> ILoggerFactory _loggerFactory;
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> ILoggerFactory <span class="hljs-number">_</span>loggerFactory;
 
     <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">WideWorldImportersContext</span>(<span class="hljs-params">DbContextOptions dbContextOptions, ILoggerFactory loggerFactory</span>)
         : <span class="hljs-title">base</span>(<span class="hljs-params">dbContextOptions</span>)</span>
     {
-        <span class="hljs-keyword">this</span>._loggerFactory = loggerFactory;
+        <span class="hljs-keyword">this</span><span class="hljs-number">._</span>loggerFactory = loggerFactory;
     }
 
     <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnConfiguring</span>(<span class="hljs-params">DbContextOptionsBuilder optionsBuilder</span>)</span>
     {
-        optionsBuilder.UseLoggerFactory(<span class="hljs-keyword">this</span>._loggerFactory);
+        optionsBuilder.UseLoggerFactory(<span class="hljs-keyword">this</span><span class="hljs-number">._</span>loggerFactory);
         <span class="hljs-keyword">base</span>.OnConfiguring(optionsBuilder);
     }
 
